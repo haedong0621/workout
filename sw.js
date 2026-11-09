@@ -1,6 +1,6 @@
 // 서비스 워커: 오프라인에서도 앱이 열리게 파일을 저장해 둡니다.
 // 앱 파일을 고쳐서 다시 올릴 때는 아래 VERSION 숫자를 올려 주세요.
-const VERSION = 'v1.0.0';
+const VERSION = 'v1.0.1';
 const CACHE = 'workout-log-' + VERSION;
 const ASSETS = [
   './', './index.html', './manifest.webmanifest', './css/style.css',
