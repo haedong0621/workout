@@ -13,7 +13,7 @@
   --warn: #ffb547;
   --up: #46e0a0;
   --down: #ff7b86;
-  --tab-h: 62px;
+  --tab-h: 50px;
   --r: 16px;
   --sat: min(env(safe-area-inset-top, 0px), 59px);
   --sab: min(env(safe-area-inset-bottom, 0px), 34px);

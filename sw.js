@@ -1,10 +1,10 @@
 // 서비스 워커: 오프라인에서도 앱이 열리게 파일을 저장해 둡니다.
 // 앱 파일을 고쳐서 다시 올릴 때는 아래 VERSION 숫자를 올려 주세요.
-const VERSION = 'v1.0.1';
+const VERSION = 'v1.0.2';
 const CACHE = 'workout-log-' + VERSION;
 const ASSETS = [
   './', './index.html', './manifest.webmanifest', './css/style.css',
-  './js/main.js', './js/util.js', './js/calc.js', './js/seed.js', './js/db.js', './js/timer.js',
+  './js/main.js', './js/util.js', './js/version.js', './js/calc.js', './js/seed.js', './js/db.js', './js/timer.js',
   './js/router.js', './js/ui.js', './js/session.js', './js/picker.js',
   './js/views/home.js', './js/views/workout.js', './js/views/routine.js', './js/views/library.js',
   './js/views/history.js', './js/views/body.js', './js/views/settings.js',
