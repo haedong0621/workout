@@ -179,5 +179,5 @@ function screenInfo() {
   const bottom = Math.round(parseFloat(cs.paddingBottom) || 0);
   probe.remove();
   const standalone = (window.navigator.standalone === true || matchMedia('(display-mode: standalone)').matches) ? '홈화면앱' : '브라우저';
-  return `${standalone} · 화면 ${screen.width}×${screen.height} · 창 ${innerWidth}×${innerHeight} · 안전영역 위 ${top} 아래 ${bottom}`;
+  return `${standalone} · 화면 ${screen.width}×${screen.height} · 창 ${innerWidth}×${innerHeight} · 안전영역 위 ${top} 아래 ${bottom} · 보정 ${getComputedStyle(document.documentElement).getPropertyValue('--vgap').trim() || '0px'}`;
 }

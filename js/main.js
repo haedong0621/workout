@@ -1,5 +1,6 @@
 // 앱 시작점
 import { loadAll, seedIfNeeded, requestPersist, state, activeSession, onDbError } from './db.js';
+import { initViewportGap } from './viewport.js';
 import { initRouter, go, currentHash } from './router.js';
 import { startTicker, loadRest, setWakeLock, onTick, rest, restRemaining, restRunning } from './timer.js';
 import { h, fmtClock } from './util.js';
@@ -72,6 +73,7 @@ function buildChrome() {
 
 async function boot() {
   onDbError((e) => { console.error(e); toast('저장 중 문제가 생겼어요. 저장 공간을 확인해 주세요', { ms: 4000 }); });
+  initViewportGap();
   try { await loadAll(); } catch (e) { console.error(e); }
   await seedIfNeeded();
   loadRest();

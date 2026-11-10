@@ -383,3 +383,6 @@ textarea.input { resize: none; line-height: 1.5; }
 .set-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .set-line:last-of-type { border-bottom: 0; }
 .card > .card-title { margin-bottom: 6px; }
+
+/* 아이폰 홈 화면 앱에서 아래쪽 기준선이 짧게 잡히는 경우의 보정 (js/viewport.js 가 --vgap 을 채워요) */
+#app, #tabbar, .minibar, .restbar, .bottombar, .toast, .sheet, .sheet-back { margin-bottom: calc(-1 * var(--vgap, 0px)); }
