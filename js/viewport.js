@@ -16,7 +16,13 @@ export function applyViewportGap() {
   const ae = document.activeElement;
   if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return; // 키보드가 올라온 동안엔 건드리지 않아요
   let gap = 0;
-  if (standalone && portrait) {
+  // 상태바 아래에서 시작하는 모드(안전영역 위=0)에서는 어긋남이 아니라 정상이라 건드리지 않아요
+  const sp = document.createElement('div');
+  sp.style.cssText = 'position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top,0px)';
+  document.body.append(sp);
+  const satNow = parseFloat(getComputedStyle(sp).paddingTop) || 0;
+  sp.remove();
+  if (standalone && portrait && satNow > 0) {
     root.style.setProperty('--vgap', '0px');
     const bottom = measure();
     const g = Math.round(screen.height - bottom);
