@@ -2,7 +2,7 @@
 import { loadAll, seedIfNeeded, requestPersist, state, activeSession, onDbError } from './db.js';
 import { initViewportGap } from './viewport.js';
 import { initRouter, go, currentHash } from './router.js';
-import { startTicker, loadRest, setWakeLock, onTick, rest, restRemaining, restRunning } from './timer.js';
+import { startTicker, loadRest, setWakeLock, onTick, rest, restRemaining, restRunning, applyAudioSession } from './timer.js';
 import { h, fmtClock } from './util.js';
 import { icon, toast } from './ui.js';
 import * as home from './views/home.js';
@@ -85,6 +85,7 @@ async function boot() {
   if (!startHash && activeSession()) location.replace('#/workout');
 
   initRouter({ routes, viewEl: chrome.view, onRender: chrome.onRender });
+  applyAudioSession();
   startTicker();
   if (activeSession()) setWakeLock(true);
 

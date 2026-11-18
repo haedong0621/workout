@@ -82,6 +82,16 @@ function alertRestEnd() {
 let audioEl = null;
 let actx = null;
 
+// 'mix'(기본): 다른 앱의 음악을 끊지 않고 같이 울려요(무음 스위치를 따라요).
+// 'loud': <audio> 로 확실히 울리지만 다른 앱의 음악이 멈출 수 있어요.
+const soundMode = () => (state.settings.soundMode === 'loud' ? 'loud' : 'mix');
+
+export function applyAudioSession() {
+  try {
+    if (navigator.audioSession) navigator.audioSession.type = soundMode() === 'loud' ? 'playback' : 'ambient';
+  } catch { /* noop */ }
+}
+
 function makeBeepWav() {
   const sr = 22050;
   const pattern = [[880, 0.16], [0, 0.07], [880, 0.16], [0, 0.07], [1175, 0.32]];
@@ -106,7 +116,8 @@ function makeBeepWav() {
 }
 
 export function unlockAudio() {
-  try {
+  applyAudioSession();
+  if (soundMode() === 'loud') try {
     if (!audioEl) {
       audioEl = new Audio(URL.createObjectURL(makeBeepWav()));
       audioEl.preload = 'auto';
@@ -136,6 +147,12 @@ function webAudioBeep() {
 }
 
 export function playBeep() {
+  applyAudioSession();
+  if (soundMode() === 'mix') {
+    try { if (actx && actx.state === 'suspended') actx.resume(); } catch { /* noop */ }
+    webAudioBeep();
+    return;
+  }
   try {
     if (audioEl) {
       audioEl.muted = false; audioEl.currentTime = 0;

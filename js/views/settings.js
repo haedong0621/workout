@@ -4,8 +4,8 @@ import { APP_VERSION } from '../version.js';
 import { state, setSetting, exportAll, importAll, validateBackup, wipeAll } from '../db.js';
 import { effWeight } from '../calc.js';
 import { rerender } from '../router.js';
-import { icon, toggle, toast, openSheet, choiceSheet, confirmSheet, promptSheet } from '../ui.js';
-import { ensureNotifyPermission, unlockAudio, playBeep } from '../timer.js';
+import { icon, toggle, toast, segmented, openSheet, choiceSheet, confirmSheet, promptSheet } from '../ui.js';
+import { ensureNotifyPermission, unlockAudio, playBeep, applyAudioSession } from '../timer.js';
 
 const standalone = () => window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
 
@@ -74,6 +74,7 @@ export function render() {
     row('종료 소리', '앱이 켜져 있을 때 울려요', h('div', { class: 'inline' },
       h('button', { class: 'btn ghost small', type: 'button', onclick: () => { unlockAudio(); setTimeout(playBeep, 50); } }, '들어보기'),
       toggle(S.sound, (v) => setSetting('sound', v)))),
+    row('소리 방식', '음악과 같이 울리는 방식은 무음 스위치를 따라요', segmented([['mix', '음악과 함께'], ['loud', '확실히 울리기']], S.soundMode === 'loud' ? 'loud' : 'mix', (v) => { setSetting('soundMode', v).then(() => { applyAudioSession(); toast(v === 'loud' ? '소리는 확실하지만 음악이 멈출 수 있어요' : '음악을 끊지 않고 같이 울려요'); }); })),
     row('종료 알림 (배너)', typeof Notification === 'undefined' ? '이 브라우저는 지원하지 않아요' : '앱이 백그라운드에 살아 있을 때만 와요', toggle(!!S.notify && typeof Notification !== 'undefined' && Notification.permission === 'granted', async (v) => {
       if (!v) { setSetting('notify', false); return; }
       const p = await ensureNotifyPermission();

@@ -11,6 +11,7 @@ export const DEFAULTS = {
   restDefault: 90,
   restAuto: true,
   sound: true,
+  soundMode: 'mix',
   notify: false,
   keepAwake: true,
   includeWarmup: true,
