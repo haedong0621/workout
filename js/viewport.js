@@ -1,34 +1,45 @@
-// 아이폰 홈 화면 앱에서 position:fixed 의 "맨 아래" 기준선이 실제 화면보다 짧게 잡히는 경우를 보정해요.
-// 실제로 재 보고(화면 높이 - 기준선), 어긋남이 있을 때만 --vgap 으로 아래쪽 고정 요소를 내려 줘요.
-function measure() {
-  const probe = document.createElement('div');
-  probe.style.cssText = 'position:fixed;left:0;bottom:0;width:1px;height:0;visibility:hidden;margin:0;padding:0';
-  document.body.append(probe);
-  const bottom = probe.getBoundingClientRect().bottom;
-  probe.remove();
-  return bottom;
+// 아이폰 홈 화면 앱에서 position:fixed 의 "맨 아래" 기준선(앱이 실제로 그릴 수 있는 아래쪽 끝)이
+// 화면 맨 아래보다 위에 있는 경우가 있어요. 그 아래쪽은 앱이 그릴 수 없는 영역이라,
+// 탭바를 아래로 내리지 않고(잘려요) 보이는 영역 안에 맞춰요. 홈 인디케이터는 이미 그 영역 밖이므로 여백도 줄여요.
+function probeRect(css) {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;visibility:hidden;margin:0;' + css;
+  document.body.append(el);
+  const r = el.getBoundingClientRect();
+  const cs = getComputedStyle(el);
+  const out = { bottom: r.bottom, pb: parseFloat(cs.paddingBottom) || 0, pt: parseFloat(cs.paddingTop) || 0 };
+  el.remove();
+  return out;
+}
+
+export function measureViewport() {
+  const a = probeRect('left:0;bottom:0;width:1px;height:0;');
+  const b = probeRect('left:0;top:0;width:1px;height:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);');
+  const standalone = window.navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+  return { standalone, layoutBottom: Math.round(a.bottom), envTop: Math.round(b.pt), envBottom: Math.round(b.pb) };
 }
 
 export function applyViewportGap() {
   const root = document.documentElement;
-  const standalone = window.navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
-  const portrait = innerHeight > innerWidth;
   const ae = document.activeElement;
   if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return; // 키보드가 올라온 동안엔 건드리지 않아요
-  let gap = 0;
-  // 상태바 아래에서 시작하는 모드(안전영역 위=0)에서는 어긋남이 아니라 정상이라 건드리지 않아요
-  const sp = document.createElement('div');
-  sp.style.cssText = 'position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top,0px)';
-  document.body.append(sp);
-  const satNow = parseFloat(getComputedStyle(sp).paddingTop) || 0;
-  sp.remove();
-  if (standalone && portrait && satNow > 0) {
+  root.style.removeProperty('--sab');
+  const m = measureViewport();
+  const portrait = innerHeight > innerWidth;
+  const gap = m.standalone && portrait ? Math.round(screen.height - m.layoutBottom) : 0;
+  if (gap >= 20 && gap <= 120) {
+    root.style.setProperty('--sab', Math.max(0, Math.min(m.envBottom, 34) - gap) + 'px');
+    root.style.setProperty('--vgap', gap + 'px');
+  } else {
     root.style.setProperty('--vgap', '0px');
-    const bottom = measure();
-    const g = Math.round(screen.height - bottom);
-    if (g >= 20 && g <= 80) gap = g; // 상태바 높이 정도의 어긋남일 때만
   }
-  root.style.setProperty('--vgap', gap + 'px');
+}
+
+export function screenInfo() {
+  const m = measureViewport();
+  const vv = window.visualViewport ? Math.round(visualViewport.height) : '-';
+  const gap = getComputedStyle(document.documentElement).getPropertyValue('--vgap').trim() || '0px';
+  return `${m.standalone ? '홈화면앱' : '브라우저'} · 화면 ${screen.width}×${screen.height} · 창 ${innerWidth}×${innerHeight} · vv ${vv} · 하단선 ${m.layoutBottom} · 안전영역 위 ${m.envTop} 아래 ${m.envBottom} · 어긋남 ${gap}`;
 }
 
 export function initViewportGap() {

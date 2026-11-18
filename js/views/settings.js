@@ -1,6 +1,7 @@
 // 설정 + 백업/복원
 import { h, fmtNum, fmtYMD, dateKey, parseNum, fmtTime } from '../util.js';
 import { APP_VERSION } from '../version.js';
+import { screenInfo } from '../viewport.js';
 import { state, setSetting, exportAll, importAll, validateBackup, wipeAll } from '../db.js';
 import { effWeight } from '../calc.js';
 import { rerender } from '../router.js';
@@ -169,16 +170,4 @@ function importFlow() {
   });
   document.body.append(input);
   input.click();
-}
-
-// 화면 크기 진단용: 폰이 알려주는 안전영역/화면 값을 한 줄로 보여줘요.
-function screenInfo() {
-  const probe = h('div', { style: { position: 'fixed', visibility: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' } });
-  document.body.append(probe);
-  const cs = getComputedStyle(probe);
-  const top = Math.round(parseFloat(cs.paddingTop) || 0);
-  const bottom = Math.round(parseFloat(cs.paddingBottom) || 0);
-  probe.remove();
-  const standalone = (window.navigator.standalone === true || matchMedia('(display-mode: standalone)').matches) ? '홈화면앱' : '브라우저';
-  return `${standalone} · 화면 ${screen.width}×${screen.height} · 창 ${innerWidth}×${innerHeight} · 안전영역 위 ${top} 아래 ${bottom} · 보정 ${getComputedStyle(document.documentElement).getPropertyValue('--vgap').trim() || '0px'}`;
 }

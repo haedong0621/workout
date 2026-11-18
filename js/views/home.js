@@ -5,6 +5,7 @@ import { sessionStats } from '../calc.js';
 import { go, rerender } from '../router.js';
 import { icon, openSheet, routineThumb, exThumb, emptyState } from '../ui.js';
 import { startWorkout, exById } from '../session.js';
+import { screenInfo } from '../viewport.js';
 
 const isStandalone = () => window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
 const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
@@ -78,6 +79,7 @@ export function render(ctx) {
         h('div', { class: 'li-right' }, `${fmtNum(st.volume, 0)} kg`));
     })));
   }
+  page.append(h('div', { class: 'sub center mono', style: { fontSize: '10px', opacity: '0.6', marginTop: '18px' } }, screenInfo()));
   return page;
 }
 
