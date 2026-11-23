@@ -1,7 +1,8 @@
 /* 화면별 스타일 */
 /* ---------- 홈 ---------- */
-.routine-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.routine-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; text-align: left; display: flex; flex-direction: column; gap: 8px; }
+.routine-list { display: flex; flex-direction: column; gap: 10px; }
+.routine-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 12px 12px 14px; text-align: left; display: flex; align-items: center; gap: 12px; width: 100%; }
+.routine-card .chev { color: var(--sub); display: flex; }
 .routine-card:active { background: var(--card2); }
 .routine-name { font-weight: 800; font-size: 16px; line-height: 1.2; }
 .rs-list { display: flex; flex-direction: column; gap: 8px; max-height: 46dvh; overflow-y: auto; }

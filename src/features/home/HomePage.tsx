@@ -1,7 +1,7 @@
 // 홈: 진행 중 운동, 백업 알림, 루틴, 최근 기록
 import { sessionStats } from '@/domain/volume';
 import type { Routine } from '@/domain/types';
-import { fmtDur, fmtFull, fmtMD, fmtNum } from '@/lib/format';
+import { fmtDur, fmtMD, fmtNum } from '@/lib/format';
 import { isIOS, isStandalone } from '@/services/viewport';
 import { activeSession, doneSessions, exerciseMap, includeWarmup, routineLastRun, routines, setSetting, settings } from '@/store';
 import { go, paths } from '@/app/router';
@@ -25,7 +25,6 @@ export function HomePage() {
   return (
     <div class="page">
       <div class="page-head">
-        <div class="eyebrow">{fmtFull(Date.now())}</div>
         <h1>운동 일지</h1>
       </div>
 
@@ -59,22 +58,27 @@ export function HomePage() {
         </button>
       )}
 
-      <div class="section-title">루틴<button class="link" type="button" onClick={() => go(paths.newRoutine)}>+ 새 루틴</button></div>
+      <div class="section-title">루틴
+        <button class="btn soft small" type="button" onClick={() => go(paths.newRoutine)}><Icon name="plus" size={16} /> 새 루틴</button>
+      </div>
       {sortedRoutines.length === 0
-        ? <EmptyState title="루틴이 없어요" sub="자주 하는 운동을 묶어 두면 한 번에 시작할 수 있어요" action="첫 루틴 만들기" onAction={() => go(paths.newRoutine)} />
+        ? <EmptyState box icon={<img class="app-icon" src="./icons/apple-touch-icon.png" alt="" />} title="루틴이 없어요" sub="자주 하는 운동을 묶어 두면 한 번에 시작할 수 있어요" action="첫 루틴 만들기" onAction={() => go(paths.newRoutine)} />
         : (
-          <div class="routine-grid">
+          <div class="routine-list">
             {sortedRoutines.map((r) => (
               <button key={r.id} class="routine-card" type="button" onClick={() => void routineSheet(r)}>
                 <RoutineThumb r={r} size={52} />
-                <div class="routine-name">{r.name}</div>
-                <div class="sub">운동 {r.items.length}개{lastRun.get(r.id) ? ` · 마지막 ${fmtMD(lastRun.get(r.id)!)}` : ''}</div>
+                <div class="grow">
+                  <div class="routine-name">{r.name}</div>
+                  <div class="sub">운동 {r.items.length}개{lastRun.get(r.id) ? ` · 마지막 ${fmtMD(lastRun.get(r.id)!)}` : ''}</div>
+                </div>
+                <span class="chev"><Icon name="chevron" size={18} /></span>
               </button>
             ))}
           </div>
         )}
 
-      <button class="btn soft wide mt" type="button" onClick={() => void startWorkoutFlow(null)}><Icon name="play" size={18} /> 빈 운동 시작 (운동은 하면서 추가)</button>
+      <button class="btn soft wide mt" type="button" onClick={() => void startWorkoutFlow(null)}><Icon name="play" size={18} /> 운동 시작</button>
 
       {done.length > 0 && (
         <>

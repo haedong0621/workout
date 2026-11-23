@@ -58,9 +58,13 @@ export function DiffBadge({ delta, unit = 'kg', muted = false }: { delta: number
   return <span class={'diff ' + dir + (muted ? ' muted' : '')}>{arrow} {fmtNum(Math.abs(delta), 0)}{unit ? ' ' + unit : ''}</span>;
 }
 
-export function EmptyState({ title, sub, action, onAction, small }: { title?: string; sub?: string | null; action?: string; onAction?: () => void; small?: boolean }) {
+export function EmptyState({ title, sub, action, onAction, small, box, icon }: {
+  title?: string; sub?: string | null; action?: string; onAction?: () => void; small?: boolean;
+  /** 흰 카드 박스 모양 */ box?: boolean; icon?: ComponentChildren;
+}) {
   return (
-    <div class={'empty' + (small ? ' small' : '')}>
+    <div class={'empty' + (small ? ' small' : '') + (box ? ' box' : '')}>
+      {icon}
       {title && <div class="empty-title">{title}</div>}
       {sub && <div class="sub">{sub}</div>}
       {action && <button class="btn primary" type="button" onClick={onAction}>{action}</button>}

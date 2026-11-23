@@ -92,7 +92,7 @@ test('루틴 만들기 → 운동 → 세트 체크(휴식 타이머) → 완료
 
 test('진행 중이던 운동은 앱을 다시 열면 이어서', async ({ page }) => {
   await page.goto('/');
-  await page.click('text=빈 운동 시작');
+  await page.getByRole('button', { name: '운동 시작', exact: true }).click();
   await expect(page).toHaveURL(/#\/workout$/);
   await expect(page.locator('.wk-name')).toBeVisible();
   await page.waitForTimeout(500); // 기기 저장(IndexedDB)이 끝날 시간
