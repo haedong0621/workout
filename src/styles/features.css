@@ -143,3 +143,4 @@
 .card > .card-title { margin-bottom: 6px; }
 
 .day.has.today .day-num { color: var(--accent-ink); }
+.section-title .hint { font-size: 12px; font-weight: 600; color: var(--sub); opacity: 0.8; }

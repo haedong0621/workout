@@ -15,9 +15,12 @@ import { pickExercises } from '../exercises/ExercisePicker';
 import { ExerciseCard } from './ExerciseCard';
 import { ensureBodyweight } from './flows';
 import { RestBar } from './RestBar';
+import { useSortable } from '@/ui/sortable';
+import { moveItem } from '@/domain/workout';
 
 export function WorkoutPage() {
   const s = activeSession.value;
+  const sort = useSortable({ onMove: (from, to) => { if (s) workoutActions.updateSession(s.id, (x) => ({ ...x, items: moveItem(x.items, from, to) })); } });
   if (!s) {
     return (
       <div class="page">
@@ -48,7 +51,7 @@ export function WorkoutPage() {
       </div>
 
       {s.items.length
-        ? <div class="ex-list">{s.items.map((it, idx) => <ExerciseCard key={it.exerciseId + ':' + idx} session={s} item={it} idx={idx} />)}</div>
+        ? <div class="ex-list" ref={sort.containerRef}>{s.items.map((it, idx) => <ExerciseCard key={it.exerciseId + ':' + idx} session={s} item={it} idx={idx} sort={sort.bind(idx)} />)}</div>
         : <EmptyState title="운동이 없어요" sub="아래 버튼으로 운동을 추가하세요" />}
 
       <button class="btn soft wide" type="button" onClick={() => addExercises(s)}><Icon name="plus" size={18} /> 운동 추가</button>

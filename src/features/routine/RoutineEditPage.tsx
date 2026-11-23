@@ -13,6 +13,7 @@ import { choiceSheet, confirmSheet } from '@/ui/dialogs';
 import { Icon } from '@/ui/Icon';
 import { openSheet } from '@/ui/sheet';
 import { ExThumb, RoutineThumb } from '@/ui/thumbs';
+import { useSortable } from '@/ui/sortable';
 import { toast } from '@/ui/toast';
 import { pickExercises } from '../exercises/ExercisePicker';
 
@@ -26,6 +27,7 @@ export function RoutineEditPage({ params }: RouteProps) {
   const [removeImg, setRemoveImg] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
   useEffect(() => () => { if (img) URL.revokeObjectURL(img.url); }, [img]);
+  const sort = useSortable({ onMove: (from, to) => setD((x) => ({ ...x, items: moveItem(x.items, from, to) })) });
 
   if (!isNew && !original) {
     return <div class="page"><EmptyState title="루틴을 찾을 수 없어요" action="뒤로" onAction={() => back()} /></div>;
@@ -100,15 +102,15 @@ export function RoutineEditPage({ params }: RouteProps) {
         </button>
         <input ref={nameRef} class="input title-input" type="text" value={d.name} placeholder="루틴 이름 (예: 가슴 + 삼두)" enterKeyHint="done" onInput={(e) => set({ name: e.currentTarget.value })} />
       </div>
-      <div class="section-title">운동 목록</div>
-      <div class="routine-items">
+      <div class="section-title">운동 목록{d.items.length > 1 && <span class="hint">꾹 눌러서 순서 바꾸기</span>}</div>
+      <div class="routine-items" ref={sort.containerRef}>
         {d.items.length === 0 && <EmptyState small sub="아직 운동이 없어요. 아래 버튼으로 추가해 보세요" />}
         {d.items.map((it, i) => {
           const ex = exerciseMap.value.get(it.exerciseId);
           if (!ex) return null;
           const step = (delta: number) => setItems((items) => items.map((x, j) => (j === i ? { ...x, setCount: clamp((x.setCount || DEFAULT_SET_COUNT) + delta, 1, MAX_SET_COUNT) } : x)));
           return (
-            <div key={it.exerciseId} class="ritem">
+            <div key={it.exerciseId} class="ritem" {...sort.bind(i)}>
               <div class="ritem-main">
                 <ExThumb ex={ex} size={44} />
                 <div class="grow"><div class="ritem-name">{ex.name}</div><div class="sub">{ex.part} · {ex.equip}</div></div>

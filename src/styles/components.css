@@ -160,3 +160,9 @@ textarea.input { resize: none; line-height: 1.5; }
 .chart-dot.active { fill: var(--accent); r: 5.5; }
 .chart-empty { color: var(--sub); text-align: center; padding: 34px 0; font-size: 14px; }
 
+
+/* 꾹 눌러 끌어서 순서 바꾸기 (ui/sortable.ts) */
+[data-sort-index] { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; transition: transform 0.18s ease; }
+.sorting [data-sort-index] { pointer-events: none; }
+.sort-lifted { position: relative; z-index: 5; transition: none; scale: 1.02; box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18); }
+.sorting { touch-action: none; }

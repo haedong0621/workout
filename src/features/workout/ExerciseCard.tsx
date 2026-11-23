@@ -15,6 +15,7 @@ import { Icon } from '@/ui/Icon';
 import { openSheet } from '@/ui/sheet';
 import { SetChips } from '@/ui/SetChips';
 import { ExThumb } from '@/ui/thumbs';
+import type { SortableBind } from '@/ui/sortable';
 import { toast } from '@/ui/toast';
 import { pickExercises } from '../exercises/ExercisePicker';
 import { editMemoFlow, restSheet } from '../exercises/flows';
@@ -23,7 +24,7 @@ import { openSetEditor } from './SetEditor';
 
 const update = (s: Session, fn: (s: Session) => Session) => workoutActions.updateSession(s.id, fn);
 
-export function ExerciseCard({ session: s, item: it, idx }: { session: Session; item: SessionItem; idx: number }) {
+export function ExerciseCard({ session: s, item: it, idx, sort }: { session: Session; item: SessionItem; idx: number; sort?: SortableBind }) {
   const ex = exerciseMap.value.get(it.exerciseId);
   const inc = includeWarmup.value;
   const st = itemStats(it, s.bw, inc);
@@ -32,7 +33,7 @@ export function ExerciseCard({ session: s, item: it, idx }: { session: Session; 
   const thumbSrc = ex ?? { imageId: null, part: it.part, equip: it.equip };
 
   return (
-    <section class={'ex-card' + (allDone ? ' complete' : '')}>
+    <section class={'ex-card' + (allDone ? ' complete' : '')} {...sort}>
       <div class="ex-head">
         <ExThumb ex={thumbSrc} size={48} />
         <div class="grow">
