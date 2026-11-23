@@ -7,6 +7,7 @@ import { activeSession } from '@/store';
 import { EmptyState } from '@/ui/controls';
 import { Elapsed } from '@/ui/Clock';
 import { Icon } from '@/ui/Icon';
+import { MenuHost } from '@/ui/popover';
 import { SheetHost } from '@/ui/sheet';
 import { ToastHost } from '@/ui/toast';
 import { currentHash, currentRoute, go, paths } from './router';
@@ -79,6 +80,7 @@ export function App() {
       </nav>
       <MiniBar show={showMini} />
       <SheetHost />
+      <MenuHost />
       <ToastHost />
     </>
   );

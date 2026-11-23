@@ -58,7 +58,7 @@
 .ex-foot { display: flex; gap: 8px; margin-top: 10px; }
 .ex-foot .btn { flex: 1; }
 
-.restbar { position: fixed; left: 12px; right: 12px; z-index: 41; bottom: calc(86px + var(--sab)); display: none; border-radius: 16px; overflow: hidden; background: #e3f6ee; border: 1px solid #9bdcc3; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18); }
+.restbar { position: fixed; left: 12px; right: 12px; z-index: 41; bottom: calc(86px + var(--bottom-pad)); display: none; border-radius: 16px; overflow: hidden; background: #e3f6ee; border: 1px solid #9bdcc3; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18); }
 .restbar.show { display: block; }
 .rest-fill { position: absolute; inset: 0 auto 0 0; width: 0; background: rgba(11, 143, 98, 0.2); transition: width 0.5s linear; }
 .rest-inner { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; }
@@ -73,7 +73,7 @@
 .restbar.done .rest-label { color: #9a6400; }
 @keyframes pulse { 50% { box-shadow: 0 0 0 6px rgba(255, 181, 71, 0.25); } }
 
-.bottombar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px calc(12px + var(--sab)); background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--line); }
+.bottombar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px calc(12px + var(--bottom-pad)); background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--line); }
 .bb-main { font-size: 20px; font-weight: 800; }
 
 /* ---------- 종목 상세 ---------- */
@@ -145,3 +145,17 @@
 
 .day.has.today .day-num { color: var(--accent-ink); }
 .section-title .hint { font-size: 12px; font-weight: 600; color: var(--sub); opacity: 0.8; }
+
+/* ---------- 루틴 그룹 (홈) ---------- */
+.routine-card .grow { min-width: 0; }
+.routine-card .routine-name, .routine-card .sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.routine-card .more { margin: -6px -4px -6px 0; color: var(--text); }
+.group-head { display: flex; align-items: center; gap: 8px; width: 100%; padding: 12px 14px; border-radius: 14px; text-align: left; }
+.group-head .group-chev { display: flex; color: var(--sub); transform: rotate(90deg); transition: transform 0.18s ease; }
+.group-head.collapsed { background: var(--card); border: 1px solid var(--line); }
+.group-head.collapsed .group-chev { transform: none; }
+.group-name { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.group-label { padding: 8px 4px 0; font-size: 13px; font-weight: 600; color: var(--sub); }
+.group-sheet .pick-item { padding: 12px 8px; }
+.new-group { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+.new-group .input { flex: 1; }

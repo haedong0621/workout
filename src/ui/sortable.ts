@@ -13,6 +13,8 @@ import { edgeScrollSpeed, sortLayout, type Box } from './sortMath';
 
 export const LONG_PRESS_MS = 400;
 const MOVE_TOLERANCE = 8;
+/** 맨 위 머리 줄보다 위로는 못 가게 (첫 줄이 머리일 때) */
+const isStatic = (el: HTMLElement | undefined) => !!el && el.hasAttribute('data-sort-static');
 
 interface Session {
   /** data-sort-index 값(목록에서의 번호) */
@@ -46,7 +48,7 @@ function scrollParent(el: HTMLElement | null): HTMLElement | null {
 function swallowNextClick(): void {
   const stop = (e: Event) => { e.preventDefault(); e.stopPropagation(); };
   document.addEventListener('click', stop, { capture: true, once: true });
-  setTimeout(() => document.removeEventListener('click', stop, { capture: true }), 400);
+  setTimeout(() => document.removeEventListener('click', stop, { capture: true }), 120);
 }
 
 export interface SortableBind {
@@ -55,9 +57,16 @@ export interface SortableBind {
   onPointerDown: (e: PointerEvent) => void;
 }
 
+/** 끌 수는 없지만 자리를 함께 비켜 주는 줄(예: 그룹 머리) */
+export interface SortableStaticBind {
+  'data-sort-index': number;
+  'data-sort-static': '';
+}
+
 export function useSortable({ onMove, delay = LONG_PRESS_MS }: { onMove: (from: number, to: number) => void; delay?: number }): {
   containerRef: RefObject<HTMLDivElement>;
   bind: (index: number) => SortableBind;
+  bindStatic: (index: number) => SortableStaticBind;
   dragging: number | null;
 } {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -78,7 +87,8 @@ export function useSortable({ onMove, delay = LONG_PRESS_MS }: { onMove: (from: 
   const layout = (s: Session) => {
     const scrolled = s.scroller ? s.scroller.scrollTop - s.scrollStart : 0;
     const dy = s.y - s.startY + scrolled;
-    const { to, shifts } = sortLayout(s.boxes, s.fromPos, dy);
+    let { to, shifts } = sortLayout(s.boxes, s.fromPos, dy);
+    if (to === 0 && s.fromPos !== 0 && isStatic(s.els[0])) ({ to, shifts } = sortLayout(s.boxes, s.fromPos, Math.max(dy, s.boxes[0]!.top + s.boxes[0]!.height - s.boxes[s.fromPos]!.top)));
     s.to = s.indexes[to] ?? s.from;
     s.els.forEach((el, i) => { el.style.transform = `translateY(${i === s.fromPos ? dy : shifts[i]}px)`; });
   };
@@ -177,5 +187,7 @@ export function useSortable({ onMove, delay = LONG_PRESS_MS }: { onMove: (from: 
     onPointerDown: (e) => { if (e.pointerType === 'mouse' && e.button === 0) begin(index, e.clientX, e.clientY, 'mouse'); },
   });
 
-  return { containerRef, bind, dragging };
+  const bindStatic = (index: number): SortableStaticBind => ({ 'data-sort-index': index, 'data-sort-static': '' });
+
+  return { containerRef, bind, bindStatic, dragging };
 }

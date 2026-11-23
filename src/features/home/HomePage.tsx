@@ -3,14 +3,15 @@ import { sessionStats } from '@/domain/volume';
 import type { Routine } from '@/domain/types';
 import { fmtDur, fmtMD, fmtNum } from '@/lib/format';
 import { isIOS, isStandalone } from '@/services/viewport';
-import { activeSession, doneSessions, exerciseMap, includeWarmup, routineLastRun, routines, setSetting, settings } from '@/store';
+import { activeSession, doneSessions, exerciseMap, includeWarmup, routines, setSetting, settings } from '@/store';
 import { go, paths } from '@/app/router';
 import { Elapsed } from '@/ui/Clock';
 import { EmptyState } from '@/ui/controls';
 import { Icon } from '@/ui/Icon';
 import { openSheet } from '@/ui/sheet';
-import { ExThumb, RoutineThumb } from '@/ui/thumbs';
+import { ExThumb } from '@/ui/thumbs';
 import { startWorkoutFlow } from '../workout/flows';
+import { RoutineList } from './RoutineList';
 
 const BACKUP_REMIND_DAYS = 14;
 
@@ -19,8 +20,6 @@ export function HomePage() {
   const S = settings.value;
   const done = doneSessions.value;
   const backupDays = (Date.now() - (S.lastBackupAt || 0)) / 86400000;
-  const lastRun = routineLastRun.value;
-  const sortedRoutines = [...routines.value].sort((a, b) => (lastRun.get(b.id) ?? b.createdAt) - (lastRun.get(a.id) ?? a.createdAt));
 
   return (
     <div class="page">
@@ -61,22 +60,9 @@ export function HomePage() {
       <div class="section-title">루틴
         <button class="btn soft small" type="button" onClick={() => go(paths.newRoutine)}><Icon name="plus" size={16} /> 새 루틴</button>
       </div>
-      {sortedRoutines.length === 0
+      {routines.value.length === 0
         ? <EmptyState box icon={<img class="app-icon" src="./icons/apple-touch-icon.png" alt="" />} title="루틴이 없어요" sub="자주 하는 운동을 묶어 두면 한 번에 시작할 수 있어요" action="첫 루틴 만들기" onAction={() => go(paths.newRoutine)} />
-        : (
-          <div class="routine-list">
-            {sortedRoutines.map((r) => (
-              <button key={r.id} class="routine-card" type="button" onClick={() => void routineSheet(r)}>
-                <RoutineThumb r={r} size={52} />
-                <div class="grow">
-                  <div class="routine-name">{r.name}</div>
-                  <div class="sub">운동 {r.items.length}개{lastRun.get(r.id) ? ` · 마지막 ${fmtMD(lastRun.get(r.id)!)}` : ''}</div>
-                </div>
-                <span class="chev"><Icon name="chevron" size={18} /></span>
-              </button>
-            ))}
-          </div>
-        )}
+        : <RoutineList onOpen={(r) => void routineSheet(r)} />}
 
       <button class="btn soft wide mt" type="button" onClick={() => void startWorkoutFlow(null)}><Icon name="play" size={18} /> 운동 시작</button>
 

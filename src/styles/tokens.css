@@ -17,4 +17,6 @@
   --r: 16px;
   --sat: min(env(safe-area-inset-top, 0px), 59px);
   --sab: min(env(safe-area-inset-bottom, 0px), 34px);
+  /* 탭바·하단 바 아래 최소 여백(아이폰에서 바닥에 붙지 않게) */
+  --bottom-pad: max(var(--sab), 10px);
 }

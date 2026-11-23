@@ -100,7 +100,7 @@ textarea.input { resize: none; line-height: 1.5; }
 /* 바텀 시트 */
 .sheet-back { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); opacity: 0; transition: opacity 0.22s; }
 .sheet-back.open { opacity: 1; }
-.sheet { position: fixed; left: 0; right: 0; bottom: 0; max-height: 88dvh; display: flex; flex-direction: column; background: var(--card); border-radius: 24px 24px 0 0; transform: translateY(102%); transition: transform 0.28s cubic-bezier(0.2, 0.85, 0.25, 1); padding-bottom: var(--sab); max-width: 600px; margin: 0 auto; border: 1px solid var(--line); border-bottom: 0; }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; max-height: 88dvh; display: flex; flex-direction: column; background: var(--card); border-radius: 24px 24px 0 0; transform: translateY(102%); transition: transform 0.28s cubic-bezier(0.2, 0.85, 0.25, 1); padding-bottom: var(--bottom-pad); max-width: 600px; margin: 0 auto; border: 1px solid var(--line); border-bottom: 0; }
 .sheet.open { transform: none; }
 .sheet.full { height: calc(100dvh - var(--sat) - 18px); max-height: none; }
 .sheet-grab { width: 40px; height: 4px; border-radius: 4px; background: #cfd5dc; margin: 8px auto 4px; flex: none; }
@@ -169,3 +169,11 @@ textarea.input { resize: none; line-height: 1.5; }
 .sorting [data-sort-index] { pointer-events: none; }
 .sort-lifted { position: relative; z-index: 5; transition: none; scale: 1.02; box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18); }
 .sorting { touch-action: none; }
+
+/* 작은 드롭다운 메뉴 (ui/popover.tsx) */
+.pop-back { position: fixed; inset: 0; z-index: 290; }
+.pop-menu { position: fixed; z-index: 291; width: 220px; padding: 6px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18); opacity: 0; transform: scale(0.96) translateY(-4px); transform-origin: top right; transition: opacity 0.14s ease, transform 0.14s ease; }
+.pop-menu.open { opacity: 1; transform: none; }
+.pop-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; border-radius: 10px; font-weight: 600; text-align: left; }
+.pop-item:active { background: var(--card2); }
+.pop-item.danger { color: var(--danger); }

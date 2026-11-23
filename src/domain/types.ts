@@ -37,6 +37,16 @@ export interface Routine {
   imageId: string | null;
   createdAt: number;
   items: RoutineItem[];
+  /** 속한 그룹(Settings.routineGroups 의 id). 없으면 그룹 밖 */
+  groupId?: string | null;
+  /** 홈에서 끌어서 정한 순서(작을수록 위). 없으면 최근에 한 순 */
+  order?: number;
+}
+
+/** 루틴 그룹 — 사용자가 직접 만들고 이름 짓는 묶음 */
+export interface RoutineGroup {
+  id: string;
+  name: string;
 }
 
 export interface WorkoutSet {
@@ -98,6 +108,10 @@ export interface Settings {
   seeded: boolean;
   bodyweight: number;
   iosTipDismissed: boolean;
+  /** 루틴 그룹 목록(보이는 순서) */
+  routineGroups: RoutineGroup[];
+  /** 접어 둔 그룹 id */
+  collapsedGroups: string[];
 }
 
 export interface ImageRecord {

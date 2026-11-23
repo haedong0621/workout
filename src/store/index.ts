@@ -4,6 +4,7 @@ export * from './selectors';
 export { imgURL, imageURLs, addImage, removeImage, replaceImage } from './images';
 export * as exerciseActions from './exercises';
 export * as routineActions from './routines';
+export * as groupActions from './routineGroups';
 export * as workoutActions from './workout';
 export * as bodyActions from './body';
 export * as backupActions from './backup';

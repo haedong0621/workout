@@ -13,6 +13,7 @@ import { initViewport } from './services/viewport';
 import { hideSplash } from './services/splash';
 import { setWakeLock } from './services/wakeLock';
 import { activeSession, bootStore, onStorageError, settings, storageInfo } from './store';
+import { closeMenu } from './ui/popover';
 import { closeSheetsOpenedBefore } from './ui/sheet';
 import { toast } from './ui/toast';
 import './styles/index.css';
@@ -38,7 +39,7 @@ async function boot() {
   // 운동 중이던 앱을 다시 열면 바로 운동 화면으로
   if (!location.hash && activeSession.value) location.replace(paths.workout);
   initRouter(ROUTES);
-  onNavigate((_hash, cutoff) => closeSheetsOpenedBefore(cutoff));
+  onNavigate((_hash, cutoff) => { closeSheetsOpenedBefore(cutoff); closeMenu(); });
 
   const root = document.getElementById('app');
   if (!root) throw new Error('#app 이 없어요');

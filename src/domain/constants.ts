@@ -30,6 +30,8 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
   seeded: false,
   bodyweight: 0,
   iosTipDismissed: false,
+  routineGroups: [],
+  collapsedGroups: [],
 });
 
 export const ROUTINE_EMOJIS = ['💪', '🏋️', '🔥', '⚡', '🦵', '🍑', '🫁', '🦾', '🧘', '🏃', '🚴', '🤸', '🥇', '🎯', '🧱', '🦍', '🐺', '🦁', '🐯', '🚀', '🌙', '☀️', '🍖', '😤'];

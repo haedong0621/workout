@@ -2,7 +2,7 @@
 // 빠진 필드는 기본값으로 채우고, 형식이 깨진 항목은 버립니다(null 반환).
 // 원본에 있던 "모르는 필드"는 지우지 않고 그대로 둡니다(앞으로 추가될 기능과의 호환).
 import { DEFAULT_ROUTINE_EMOJI, DEFAULT_SETTINGS } from './constants';
-import type { BodyEntry, Exercise, ExerciseKind, Routine, Session, SessionItem, SetType, Settings, WorkoutSet } from './types';
+import type { BodyEntry, Exercise, ExerciseKind, Routine, RoutineGroup, Session, SessionItem, SetType, Settings, WorkoutSet } from './types';
 import { toNum } from '@/lib/num';
 
 type Raw = Record<string, unknown>;
@@ -45,6 +45,8 @@ export function normalizeRoutine(v: unknown): Routine | null {
     emoji: str(v.emoji) || DEFAULT_ROUTINE_EMOJI,
     imageId: strOrNull(v.imageId),
     createdAt: toNum(v.createdAt, 0),
+    groupId: strOrNull(v.groupId),
+    ...(Number.isFinite(toNum(v.order, NaN)) ? { order: toNum(v.order, 0) } : {}),
     items: items.filter(isObj).filter((it) => it.exerciseId).map((it) => ({
       ...it,
       exerciseId: str(it.exerciseId),
@@ -107,6 +109,18 @@ export function normalizeBody(v: unknown): BodyEntry | null {
   return out;
 }
 
+export function normalizeGroups(v: unknown): RoutineGroup[] {
+  if (!Array.isArray(v)) return [];
+  const seen = new Set<string>();
+  const out: RoutineGroup[] = [];
+  for (const g of v) {
+    if (!isObj(g) || typeof g.id !== 'string' || !g.id || seen.has(g.id)) continue;
+    seen.add(g.id);
+    out.push({ id: g.id, name: str(g.name, '그룹').trim() || '그룹' });
+  }
+  return out;
+}
+
 /** 알려진 설정 키만, 타입이 맞는 값만 받아들임 */
 export function normalizeSettings(entries: Iterable<[string, unknown]>, base: Settings = { ...DEFAULT_SETTINGS }): Settings {
   const out: Settings = { ...base };
@@ -116,6 +130,8 @@ export function normalizeSettings(entries: Iterable<[string, unknown]>, base: Se
     const def = (DEFAULT_SETTINGS as unknown as Record<string, unknown>)[k];
     if (k === 'activeSessionId') { rec[k] = typeof v === 'string' && v ? v : null; continue; }
     if (k === 'soundMode') { rec[k] = v === 'loud' ? 'loud' : 'mix'; continue; }
+    if (k === 'routineGroups') { rec[k] = normalizeGroups(v); continue; }
+    if (k === 'collapsedGroups') { rec[k] = Array.isArray(v) ? [...new Set(v.filter((x): x is string => typeof x === 'string' && !!x))] : []; continue; }
     if (typeof def === 'number') { const n = toNum(v, NaN); if (Number.isFinite(n)) rec[k] = n; continue; }
     if (typeof def === 'boolean') { rec[k] = !!v; continue; }
   }
