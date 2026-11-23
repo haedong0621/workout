@@ -1,0 +1,22 @@
+/* 기본 요소·유틸리티 */* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0; height: 100%; background: var(--bg); color: var(--text);
+  font: 16px/1.4 -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard', 'Noto Sans KR', system-ui, sans-serif;
+  -webkit-text-size-adjust: 100%; overscroll-behavior: none;
+}
+button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+button:disabled { opacity: 0.35; pointer-events: none; }
+a { color: inherit; text-decoration: none; }
+h1 { font-size: 28px; line-height: 1.15; margin: 0; letter-spacing: -0.02em; }
+.ico { flex: none; display: block; }
+.mono { font-variant-numeric: tabular-nums; }
+.grow { flex: 1; min-width: 0; }
+.sub { color: var(--sub); font-size: 13px; }
+.center { text-align: center; justify-content: center; }
+.mt { margin-top: 12px; }
+.pad { padding: 10px 2px; }
+.pad0 { padding-bottom: 2px; }
+.wide { width: 100%; }
+.inline { display: flex; align-items: center; gap: 10px; }
+
+.diag { font-size: 11px; opacity: 0.7; padding-bottom: 8px; word-break: break-all; }
