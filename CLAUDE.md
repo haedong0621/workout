@@ -48,7 +48,10 @@ src/lib/         형식·숫자·id 도우미
 
 ## 배포
 
-- **사용자 결정(2026-11-23): 작업이 끝나면 `npm run check`와 `npm run e2e`가 통과한 뒤 main에 바로 푸시해서 배포한다** (PR·Merge 단계 없음).
+- **작업 순서(사용자 결정, 반드시 지킴)**:
+  1. 피그마 디자인 먼저 반영 → 2. 앱 코드 반영(작업 브랜치에만 커밋·푸시) → 3. `npm run check`·`npm run e2e` 통과
+  → 4. **사용자에게 결과(앱 스크린샷 등)를 보여 주고 배포해도 되는지 확인받기** → 5. 승인받은 뒤에만 main에 푸시(=배포).
+- main 푸시는 PR 없이 바로 해도 되지만, 4번 확인 없이는 절대 하지 않는다.
 - `main`에 푸시 → GitHub Actions(`.github/workflows/deploy.yml`)가 검사 후 `dist/`를 GitHub Pages에 배포.
   (저장소 Settings → Pages → Source = **GitHub Actions** 이어야 함)
 - 서비스 워커(`sw.js`)는 빌드 때 자동 생성, 버전도 파일 해시로 자동. 손으로 올릴 필요 없음.
