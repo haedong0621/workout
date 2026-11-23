@@ -6,11 +6,11 @@
 
 export type Grid = string[][];
 
-const blank = (w: number, h: number): Grid => Array.from({ length: h }, () => Array<string>(w).fill('.'));
-const rect = (g: Grid, x: number, y: number, w: number, h: number, c: string) => {
+export const blank = (w: number, h: number): Grid => Array.from({ length: h }, () => Array<string>(w).fill('.'));
+export const rect = (g: Grid, x: number, y: number, w: number, h: number, c: string) => {
   for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) { const row = g[j]; if (row && i >= 0 && i < row.length) row[i] = c; }
 };
-const px = (g: Grid, x: number, y: number, c: string) => rect(g, x, y, 1, 1, c);
+export const px = (g: Grid, x: number, y: number, c: string) => rect(g, x, y, 1, 1, c);
 
 // ---------------- 앱 아이콘 (36×36) ----------------
 export const ICON_SIZE = 36;
