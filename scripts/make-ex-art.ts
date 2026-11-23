@@ -1,12 +1,12 @@
 // 기본 운동 그림 PNG 만들기: npm run ex-art
 // 원본은 src/brand/exercises/*.ts. 프레임들을 가로로 이어 붙인 스프라이트 한 장(배경 투명)으로 저장해요.
-// 앱은 CSS로 프레임을 번갈아 보여 줘요(움짤처럼). 4배로 키워 저장 → 작게 줄여도 또렷.
+// 앱은 CSS로 프레임을 번갈아 보여 줘요(움짤처럼). 3배로 키워 저장 → 작게 줄여도 또렷.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';
 import { EX_ARTS } from '../src/brand/exercises/index.ts';
 import { EX_PALETTE } from '../src/brand/exercises/palette.ts';
 
-const SCALE = 4;
+const SCALE = 3;
 const OUT = new URL('../public/exercises/', import.meta.url);
 mkdirSync(OUT, { recursive: true });
 
