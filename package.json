@@ -1,9 +1,9 @@
 {
   "name": "workout-log",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "private": true,
   "type": "module",
-  "description": "아이폰 홈 화면에 추가해서 쓰는 개인 운동 기록 PWA",
+  "description": "운동 일지 — 아이폰 홈 화면에 추가해서 쓰는 개인 운동 기록 PWA",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "vite build && playwright test --trace off",
-    "check": "npm run typecheck && npm run test && npm run build"
+    "check": "npm run typecheck && npm run test && npm run build",
+    "icons": "node scripts/make-icons.ts"
   },
   "engines": {
     "node": ">=20"

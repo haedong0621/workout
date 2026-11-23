@@ -26,7 +26,7 @@ export function HomePage() {
     <div class="page">
       <div class="page-head">
         <div class="eyebrow">{fmtFull(Date.now())}</div>
-        <h1>운동 기록용</h1>
+        <h1>운동 일지</h1>
       </div>
 
       {isIOS() && !isStandalone() && !S.iosTipDismissed && (

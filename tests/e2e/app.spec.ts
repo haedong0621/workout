@@ -34,7 +34,7 @@ test.beforeEach(async ({ page }) => {
 
 test('첫 실행: 기본 운동 54개, 탭 이동', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('h1')).toHaveText('운동 기록용');
+  await expect(page.locator('h1')).toHaveText('운동 일지');
   await page.click('#tabbar >> text=종목');
   await expect(page.locator('.page-head .sub')).toHaveText('54개');
   await page.fill('input[type=search]', 'ㅂㅊㅍㄹㅅ');

@@ -10,6 +10,7 @@ import { initRestTimer, setRestFinishedHandler } from './services/restTimer';
 import { registerServiceWorker } from './services/serviceWorker';
 import { playBeep, setSoundMode, vibrate } from './services/sound';
 import { initViewport } from './services/viewport';
+import { hideSplash } from './services/splash';
 import { setWakeLock } from './services/wakeLock';
 import { activeSession, bootStore, onStorageError, settings, storageInfo } from './store';
 import { closeSheetsOpenedBefore } from './ui/sheet';
@@ -42,6 +43,7 @@ async function boot() {
   const root = document.getElementById('app');
   if (!root) throw new Error('#app 이 없어요');
   render(<App />, root);
+  hideSplash();
 
   // 운동 중에는 화면 켜짐 유지
   effect(() => { void setWakeLock(!!activeSession.value && settings.value.keepAwake); });
@@ -55,6 +57,7 @@ async function boot() {
 
 boot().catch((e: unknown) => {
   console.error(e);
+  hideSplash(0);
   const el = document.getElementById('app');
   if (el) el.textContent = '앱을 시작하지 못했어요: ' + (e instanceof Error ? e.message : String(e));
 });

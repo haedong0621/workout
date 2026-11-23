@@ -17,6 +17,8 @@
     "allowImportingTsExtensions": true
   },
   "include": [
+    "scripts",
+    "src/brand",
     "vite.config.ts",
     "playwright.config.ts",
     "build",

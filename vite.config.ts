@@ -4,6 +4,7 @@ import preact from '@preact/preset-vite';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import { serviceWorkerPlugin } from './build/sw-plugin.ts';
+import { splashPlugin } from './build/splash-plugin.ts';
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string };
 
@@ -15,7 +16,7 @@ export default defineConfig({
   publicDir: r('./public'),
   // 상대 경로로 빌드 → github.io/workout/ 이든 다른 주소든 그대로 동작
   base: './',
-  plugins: [preact(), serviceWorkerPlugin()],
+  plugins: [preact(), splashPlugin(pkg.version), serviceWorkerPlugin()],
   resolve: { alias: { '@': r('./src') } },
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   build: { outDir: r('./dist'), emptyOutDir: true, target: 'safari15', sourcemap: true, assetsInlineLimit: 0 },

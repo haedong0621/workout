@@ -99,7 +99,7 @@ export function SettingsPage() {
         <div class="card-title">초기화</div>
         <button class="btn danger-ghost wide" type="button" onClick={wipeFlow}>모든 데이터 삭제</button>
       </div>
-      <div class="sub center pad">운동 기록용 v{__APP_VERSION__}</div>
+      <div class="sub center pad">운동 일지 v{__APP_VERSION__}</div>
       <div class="sub center mono diag">{screenInfo()}</div>
     </div>
   );
