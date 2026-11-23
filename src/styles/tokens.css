@@ -1,0 +1,20 @@
+/* 디자인 값(색·크기). 색을 바꿀 땐 여기만 고치면 돼요. */
+:root {
+  --bg: #f4f6f8;
+  --card: #ffffff;
+  --card2: #eceff3;
+  --line: #e0e4ea;
+  --text: #14181d;
+  --sub: #667080;
+  --accent: #0b8f62;
+  --accent-ink: #ffffff;
+  --accent-soft: rgba(11, 143, 98, 0.12);
+  --danger: #e5384a;
+  --warn: #b86e00;
+  --up: #0b8f62;
+  --down: #e5384a;
+  --tab-h: 50px;
+  --r: 16px;
+  --sat: min(env(safe-area-inset-top, 0px), 59px);
+  --sab: min(env(safe-area-inset-bottom, 0px), 34px);
+}
