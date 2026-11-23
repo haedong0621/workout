@@ -76,6 +76,11 @@ textarea.input { resize: none; line-height: 1.5; }
 .thumb { border-radius: 12px; overflow: hidden; display: grid; place-items: center; flex: none; background: var(--card2); position: relative; }
 .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .thumb.round { border-radius: 50%; }
+/* 기본 운동 그림: 가로 스프라이트의 프레임을 0.6초마다 번갈아 (움짤처럼) */
+.ex-art { width: 100%; height: 100%; display: block; background-repeat: no-repeat; background-size: 200% 100%; background-position: 0 0; }
+.ex-art.f2 { animation: ex-art-2 1.2s steps(1, end) infinite; }
+@keyframes ex-art-2 { 0% { background-position: 0 0; } 50% { background-position: 100% 0; } }
+@media (prefers-reduced-motion: reduce) { .ex-art { animation: none !important; } }
 .thumb-btn, .hero-img { position: relative; display: block; }
 .thumb-edit { position: absolute; right: 2px; bottom: 2px; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; }
 

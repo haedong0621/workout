@@ -63,6 +63,7 @@ src/lib/         형식·숫자·id 도우미
 
 - 앱 아이콘·이름 픽셀아트 원본: `src/brand/pixelArt.ts`. 고친 뒤 `npm run icons`로 PNG를 다시 만들고 커밋.
 - 스플래시는 `build/splash-plugin.ts`가 빌드 때 `src/index.html`의 `<!--splash-->` 자리에 넣고, `services/splash.ts`가 최소 0.8초 뒤 숨김.
+- 기본 운동 그림: 원본 `src/brand/exercises/`(쿼터뷰 픽셀 렌더러 + 사람 인형). 고친 뒤 `npm run ex-art`로 `public/exercises/*.png`를 다시 만들고 커밋. 운동 연결은 `src/ui/exerciseArt.ts`(운동 id 기준).
 - 디자인 작업 순서: 피그마(`00 브랜드`, `01 화면 플로우`)를 먼저 고치고 → 코드 반영.
 
 ## 아이폰 주의

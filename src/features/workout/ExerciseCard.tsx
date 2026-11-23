@@ -30,7 +30,7 @@ export function ExerciseCard({ session: s, item: it, idx, sort }: { session: Ses
   const st = itemStats(it, s.bw, inc);
   const prev = previousEntry(sessions.value, s, it.exerciseId, inc);
   const allDone = it.sets.length > 0 && it.sets.every((x) => x.done);
-  const thumbSrc = ex ?? { imageId: null, part: it.part, equip: it.equip };
+  const thumbSrc = ex ?? { id: it.exerciseId, imageId: null, part: it.part, equip: it.equip };
 
   return (
     <section class={'ex-card' + (allDone ? ' complete' : '')} {...sort}>
