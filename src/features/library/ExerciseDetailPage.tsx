@@ -62,10 +62,14 @@ export function ExerciseDetailPage({ params }: RouteProps) {
     <div class="page">
       <TopBar title="종목 상세" onBack={() => back(paths.library)} />
       <div class="hero">
-        <button class="hero-img" type="button" aria-label="이미지 변경" onClick={changeImage}>
-          {url ? <img src={url} alt="" /> : <ExThumb ex={ex} size={120} />}
-          <span class="thumb-edit"><Icon name="image" size={14} /></span>
-        </button>
+        {ex.seed
+          ? <div class="hero-img"><ExThumb ex={ex} size={120} opt={opt ?? null} /></div>
+          : (
+            <button class="hero-img" type="button" aria-label="이미지 변경" onClick={changeImage}>
+              {url ? <img src={url} alt="" /> : <ExThumb ex={ex} size={120} />}
+              <span class="thumb-edit"><Icon name="image" size={14} /></span>
+            </button>
+          )}
         <div class="hero-name">{exName(ex, opt)}</div>
         <div class="chips center">
           <span class="tag">{ex.part}</span>

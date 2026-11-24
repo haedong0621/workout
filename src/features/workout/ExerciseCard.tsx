@@ -37,7 +37,7 @@ export function ExerciseCard({ session: s, item: it, idx, sort }: { session: Ses
   return (
     <section class={'ex-card' + (allDone ? ' complete' : '')} {...sort}>
       <div class="ex-head">
-        <ExThumb ex={thumbSrc} size={48} />
+        <ExThumb ex={thumbSrc} size={48} opt={it.opt ?? null} />
         <div class="grow">
           <div class="ex-name">{ex ? optionTitle(ex.name, ex.toggle, it.opt) : it.name}</div>
           <div class="vol">

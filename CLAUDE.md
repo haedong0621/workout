@@ -74,7 +74,10 @@ src/lib/         형식·숫자·id 도우미
 
 - 앱 아이콘·이름 픽셀아트 원본: `src/brand/pixelArt.ts`. 고친 뒤 `npm run icons`로 PNG를 다시 만들고 커밋.
 - 스플래시는 `build/splash-plugin.ts`가 빌드 때 `src/index.html`의 `<!--splash-->` 자리에 넣고, `services/splash.ts`가 최소 0.8초 뒤 숨김.
-- 기본 운동 그림: 원본 `src/brand/exercises/`(쿼터뷰 픽셀 렌더러 + 사람 인형). 고친 뒤 `npm run ex-art`로 `public/exercises/*.png`를 다시 만들고 커밋. 운동 연결은 `src/ui/exerciseArt.ts`(운동 id 기준).
+- 기본 운동 그림(사용자 확정 규칙): 기본 운동 96개 전부 + 토글 옵션별(스미스 = 스미스 머신, 플레이트 = 레버에 원판, 핀 = 중량 스택, 이지바 = W자 바, 맨몸 옵션은 한 장) = 143장, 2프레임.
+  - 같은 운동은 사람 자세·카메라 각도가 같고 장비만 다름. 머신 레버는 회전축에서 한 덩어리로 돌기만 함(`lever.ts`, 모양이 바뀌면 안 됨).
+  - 기본 운동은 사진·움짤을 바꿀 수 없고 항상 이 그림(옵션 바꾸면 그림도 바뀜). 직접 만든 운동만 사진·움짤.
+  - 원본 `src/brand/exercises/`: `kit.ts`(자세 IK·회전·장면) · `machine.ts`(프레임·스택·스미스 부품) · `lever.ts` · 부위별 파일 · `machines.ts`(핀/플레이트) · `variantArts.ts`(스미스/이지바). 연결표 `catalogArt.ts`(카탈로그 id → 그림 id, 옵션 접미사). 고친 뒤 `npm run ex-art`로 `public/exercises/*.png` 다시 만들고 커밋(전체 15분 정도).
 - 루틴 그림(11종 픽셀 근육 지도): 원본 `src/brand/routines/pictogram.ts`(그리는 법) + `src/domain/routineArt.ts`(목록·자동 추천 규칙). 고친 뒤 `npm run routine-art`로 `public/routines/*.png`를 다시 만들고 커밋. 스타일(사용자 확정): 레퍼런스 정면·뒷모습 근육도 비율(등 = 승모 마름모·어깨뼈·광배 날개·허리 마름모·옆구리), 연한 몸 바탕 한 색 + 그보다 살짝 진한 조각(근육·머리·목·손·발)을 2칸 틈으로 퍼즐처럼 배치(선 없음), 강조는 산호색. 조각은 단순하게.
 - 디자인 작업 순서: 피그마(`00 브랜드`, `01 화면 플로우`)를 먼저 고치고 → 코드 반영.
 

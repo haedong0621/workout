@@ -1,19 +1,30 @@
-// 기본 운동 그림(벤치 프레스)이 목록·상세에 보이는지
-import { expect, test } from '@playwright/test';
+// 운동 그림: 토글 옵션에 맞는 그림, 기본 운동은 사진 바꾸기 없음
+import { expect, test, type Page } from '@playwright/test';
 
-test('벤치 프레스 기본 그림 표시', async ({ page }) => {
+const sheet = (page: Page) => page.locator('.sheet.open').last();
+
+test.beforeEach(async ({ page }) => {
   page.on('pageerror', (e) => { throw e; });
+});
+
+test('운동 카드 토글을 바꾸면 그림도 바뀜 (바벨 → 스미스)', async ({ page }) => {
   await page.goto('/');
-  await page.click('#tabbar >> text=종목');
-  const art = page.locator('.ex-art').first();
-  await expect(art).toBeVisible();
-  // 이미지가 실제로 불러와지는지
-  const ok = await page.evaluate(async () => {
-    const el = document.querySelector('.ex-art') as HTMLElement;
-    const url = getComputedStyle(el).backgroundImage.slice(5, -2);
-    const r = await fetch(url); return r.ok && (r.headers.get('content-type') ?? '').includes('png');
-  });
+  await page.getByRole('button', { name: '운동 시작', exact: true }).click();
+  await page.click('text=운동 추가');
+  await sheet(page).locator('input[type=search]').fill('바벨 스쿼트');
+  await sheet(page).locator('.pick-item').filter({ has: page.locator('.pick-name', { hasText: /^바벨 스쿼트$/ }) }).click();
+  await sheet(page).locator('text=1개 추가').click();
+  const art = page.locator('.ex-card .ex-head .ex-art').first();
+  await expect(art).toHaveAttribute('style', /barbell-squat\.png/);
+  await page.locator('.ex-toggle .seg-btn', { hasText: '스미스' }).first().click();
+  await expect(art).toHaveAttribute('style', /barbell-squat-smith\.png/);
+  // 그림 파일이 실제로 있음
+  const ok = await page.evaluate(async () => (await fetch('./exercises/barbell-squat-smith.png')).ok);
   expect(ok).toBe(true);
-  // 그림은 벤치 프레스 하나에만
-  await expect(page.locator('.ex-art')).toHaveCount(1);
+});
+
+test('기본 운동 수정 화면에는 사진 선택이 없음', async ({ page }) => {
+  await page.goto('/#/exercise/seed-5');
+  await expect(page.locator('.hero-img .ex-art')).toBeVisible();
+  await expect(page.locator('button.hero-img')).toHaveCount(0);
 });

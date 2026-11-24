@@ -112,7 +112,9 @@ test('이전 앱이 저장한 기록을 그대로 보여 줌', async ({ page }) 
   await expect(page.locator('.sess-stats')).toContainText('2,606');
   await expect(page.locator('.ex-sum').first()).toContainText('▲ 160 kg');
   await page.goto('/#/exercise/seed-0');
-  await expect(page.locator('.hero-img img')).toBeVisible();
+  // 기본 운동은 넣어 둔 사진 대신 항상 기본 그림 (사진 데이터는 그대로 남음, 바꾸기 버튼 없음)
+  await expect(page.locator('.hero-img .ex-art')).toBeVisible();
+  await expect(page.locator('button.hero-img')).toHaveCount(0);
   await expect(page.locator('.memo-area')).toHaveValue('시트 4번');
   await expect(page.locator('.stat-row')).toContainText('82.5');
   await page.goto('/#/settings');

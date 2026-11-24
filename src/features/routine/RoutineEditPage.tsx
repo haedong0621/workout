@@ -97,7 +97,7 @@ export function RoutineEditPage({ params }: RouteProps) {
           return (
             <div key={`${it.exerciseId}|${it.opt ?? ''}`} class="ritem" {...sort.bind(i)}>
               <div class="ritem-main">
-                <ExThumb ex={ex} size={44} />
+                <ExThumb ex={ex} size={44} opt={it.opt} />
                 <div class="grow"><div class="ritem-name">{exName(ex, it.opt)}</div><div class="sub">{exerciseSubtitle(ex)}</div></div>
               </div>
               <div class="ritem-ctl">

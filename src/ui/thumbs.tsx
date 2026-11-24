@@ -1,6 +1,6 @@
 import type { Exercise, Routine } from '@/domain/types';
 import { recommendArt, routineArtById } from '@/domain/routineArt';
-import { exerciseMap, imgURL } from '@/store';
+import { exerciseMap, imgURL, lastOptions } from '@/store';
 import { exerciseArt } from './exerciseArt';
 
 export const PART_COLOR: Record<string, string> = {
@@ -10,12 +10,11 @@ export const PART_COLOR: Record<string, string> = {
 export const partColor = (p: string): string => PART_COLOR[p] ?? PART_COLOR['기타']!;
 export const EQUIP_EMOJI: Record<string, string> = { 바벨: '🏋️', 덤벨: '💪', 머신: '⚙️', 케이블: '🔗', 맨몸: '🤸', 기타: '🎯' };
 
-export function ExThumb({ ex, size = 46, url }: { ex: Pick<Exercise, 'imageId' | 'part' | 'equip'> & { id?: string }; size?: number; url?: string | null }) {
-  const src = url !== undefined ? url : imgURL(ex.imageId);
+/** 운동 썸네일: 기본 운동 = 그림(토글 옵션별, 없으면 마지막에 쓴 옵션) / 직접 만든 운동 = 사진·움짤, 없으면 장비 이모지 */
+export function ExThumb({ ex, size = 46, url, opt }: { ex: Pick<Exercise, 'imageId' | 'part' | 'equip'> & { id?: string }; size?: number; url?: string | null; opt?: string | null }) {
   const style: Record<string, string> = { width: size + 'px', height: size + 'px', fontSize: Math.round(size * 0.46) + 'px' };
-  if (src) return <div class="thumb" style={style}><img src={src} alt="" draggable={false} /></div>;
   const c = partColor(ex.part);
-  const art = exerciseArt(ex.id);
+  const art = exerciseArt(ex.id, opt !== undefined ? opt : ex.id ? lastOptions.value.get(ex.id) : undefined);
   if (art) {
     return (
       <div class="thumb" style={{ ...style, background: c + '2b' }}>
@@ -23,6 +22,8 @@ export function ExThumb({ ex, size = 46, url }: { ex: Pick<Exercise, 'imageId' |
       </div>
     );
   }
+  const src = url !== undefined ? url : imgURL(ex.imageId);
+  if (src) return <div class="thumb" style={style}><img src={src} alt="" draggable={false} /></div>;
   return <div class="thumb" style={{ ...style, background: c + '2b', color: c }}><span>{EQUIP_EMOJI[ex.equip] ?? '🏋️'}</span></div>;
 }
 

@@ -77,14 +77,14 @@ function ExerciseFormBody({ preset, isEdit, close }: { preset: Exercise; isEdit:
         )}
       <div class="field-label">휴식 시간(초) — 비워 두면 기본값</div>
       <input class="input" type="text" inputMode="numeric" value={restText} placeholder={`기본 ${settings.value.restDefault}`} onInput={(e) => setRestText(e.currentTarget.value)} />
-      <div class="field-label">이미지 (사진 또는 움짤)</div>
-      <div class="img-edit">
+      {!ex.seed && <div class="field-label">이미지 (사진 또는 움짤)</div>}
+      {!ex.seed && <div class="img-edit">
         <div class="img-prev">{previewURL ? <img src={previewURL} alt="" /> : <ExThumb ex={ex} size={72} url={null} />}</div>
         <div class="img-actions">
           <button class="btn soft small" type="button" onClick={choose}><Icon name="image" size={16} /> 사진·움짤 선택</button>
           {previewURL && <button class="btn ghost small" type="button" onClick={() => { setPending(null); setRemoveImg(true); }}>이미지 삭제</button>}
         </div>
-      </div>
+      </div>}
       <div class="sheet-foot static">
         <button class="btn primary wide" type="button" disabled={busy} onClick={submit}>{isEdit ? '저장' : '운동 만들기'}</button>
       </div>

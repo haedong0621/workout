@@ -4,12 +4,16 @@ import { exerciseArt } from '@/ui/exerciseArt';
 import { EX_ARTS } from '@/brand/exercises/index.ts';
 
 describe('기본 운동 그림', () => {
-  it('seed-0(벤치 프레스)에 그림이 연결됨', () => {
+  it('기본 운동에 그림 연결, 토글 옵션마다 다른 그림', () => {
     expect(SEED[0]![0]).toBe('벤치 프레스');
     expect(exerciseArt('seed-0')).toEqual({ url: './exercises/bench-press.png', frames: 2 });
+    expect(exerciseArt('seed-0', '바벨')).toEqual({ url: './exercises/bench-press.png', frames: 2 });
+    expect(exerciseArt('seed-0', '스미스')).toEqual({ url: './exercises/bench-press-smith.png', frames: 2 });
+    expect(exerciseArt('seed-5', '플레이트')?.url).toBe('./exercises/machine-chest-press-plate.png');
+    expect(exerciseArt('seed-31', '이지바')?.url).toBe('./exercises/barbell-curl-ez.png');
+    expect(exerciseArt('seed-11', '중량')?.url).toBe('./exercises/dips.png');      // 맨몸은 한 장
   });
-  it('그림 없는 운동·사용자 운동은 null', () => {
-    expect(exerciseArt('seed-1')).toBeNull();
+  it('직접 만든 운동은 그림 없음(사진·이모지)', () => {
     expect(exerciseArt('ex-abc')).toBeNull();
     expect(exerciseArt(undefined)).toBeNull();
   });
