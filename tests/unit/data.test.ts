@@ -40,8 +40,10 @@ describe('IndexedDB 저장소', () => {
     expect(data.sessions).toHaveLength(2);
     expect(data.settings.restDefault).toBe(75);
     expect(data.settings.includeWarmup).toBe(false);
-    expect(schemaVersion).toBe(1);
-    expect(migrated).toEqual([]);
+    // v2(이지바 토글) 단계는 예전 목록 데이터에는 아무것도 바꾸지 않음
+    expect(schemaVersion).toBe(2);
+    expect(migrated).toEqual([2]);
+    expect(data.exercises.find((e) => e.id === 'seed-0')!.name).toBe('벤치 프레스');
   });
 
   it('put / delete / clearAll', async () => {

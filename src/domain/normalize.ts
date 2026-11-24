@@ -32,7 +32,7 @@ export function normalizeExercise(v: unknown): Exercise | null {
     pinned: Array.isArray(v.pinned) ? v.pinned.filter((x): x is string => typeof x === 'string') : [],
     seed: !!v.seed,
     createdAt: toNum(v.createdAt, 0),
-    toggle: v.toggle === 'bar' || v.toggle === 'machine' || v.toggle === 'body' ? v.toggle : null,
+    toggle: v.toggle === 'bar' || v.toggle === 'ez' || v.toggle === 'machine' || v.toggle === 'body' ? v.toggle : null,
     aka: Array.isArray(v.aka) ? v.aka.filter((x): x is string => typeof x === 'string' && !!x) : [],
   };
 }

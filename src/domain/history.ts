@@ -3,7 +3,21 @@ import type { ExerciseToggle, Session, SessionItem, WorkoutSet } from './types';
 import { itemStats } from './volume';
 import { TOGGLE_OPTIONS } from './catalog.ts';
 
-const TOGGLE_FIRST: Record<ExerciseToggle, string> = { bar: TOGGLE_OPTIONS.bar[0], machine: TOGGLE_OPTIONS.machine[0], body: TOGGLE_OPTIONS.body[0] };
+const TOGGLE_FIRST: Record<ExerciseToggle, string> = { bar: TOGGLE_OPTIONS.bar[0], ez: TOGGLE_OPTIONS.ez[0], machine: TOGGLE_OPTIONS.machine[0], body: TOGGLE_OPTIONS.body[0] };
+
+/** 운동별 마지막에 쓴 토글 옵션 (끝낸 기록 중) — 목록 이름 표시용 */
+export function lastOptionMap(sessions: readonly Session[]): Map<string, string> {
+  const best = new Map<string, { ts: number; opt: string }>();
+  for (const s of sessions) {
+    if (s.status !== 'done') continue;
+    for (const it of s.items) {
+      if (!it.opt) continue;
+      const b = best.get(it.exerciseId);
+      if (!b || s.startedAt > b.ts) best.set(it.exerciseId, { ts: s.startedAt, opt: it.opt });
+    }
+  }
+  return new Map([...best].map(([k, v]) => [k, v.opt]));
+}
 
 /** 이 운동에서 마지막으로 쓴 토글 옵션 (before 이전, 끝낸 기록 중) */
 export function lastUsedOption(sessions: readonly Session[], exerciseId: string, before = Infinity): string | undefined {

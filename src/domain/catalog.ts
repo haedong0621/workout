@@ -1,21 +1,23 @@
 // 기본 운동 목록(카탈로그)과 이름·토글 규칙 — 사용자와 확정한 규칙 (자세한 설명은 CLAUDE.md "운동 분류 규칙")
 //
 // 1. 이름 = [장비] + 운동 이름. 생략 없음. (맨몸 운동만 장비 말 없이: 딥스, 풀업 …)
-// 2. 토글은 3종류, 옵션은 항상 2개
-//      bar     : 바벨 · 스미스        → 제목이 바뀜: 바벨 런지 ↔ 스미스 런지
+// 2. 토글 옵션은 항상 2개
+//      bar     : 바벨 · 스미스        → 바가 위아래 직선으로 움직이는 운동. 제목이 바뀜: 바벨 런지 ↔ 스미스 런지
+//      ez      : 바벨 · 이지바        → 바가 호를 그리는 운동(컬, 프리처 컬, 라트익, 업라이트 로우): 바벨 컬 ↔ 이지바 컬
 //      machine : 핀 · 플레이트        → 제목 뒤에 붙음: 머신 레그 프레스 (핀) / (플레이트)
 //      body    : 어시스트 · 중량      → 제목 앞에 붙음: 어시스트 딥스 / 중량 딥스 (0kg = 맨몸)
-//    덤벨 · 케이블 · 이지바 운동은 토글 없이 각자 별도 운동.
+//    덤벨 · 케이블 운동은 토글 없이 각자 별도 운동. 목록에는 마지막에 쓴 옵션 이름으로 보임.
 // 3. 기록은 옵션별로 따로(맨몸만 어시스트·중량이 체중 기준 한 줄로 이어짐).
 // 4. aka = 다른 이름(검색·예전 이름 맞추기용).
 //
 // id 규칙 (⚠️ 기록과 연결 — 절대 바꾸지 않기)
-//  seed-0 … seed-53 : 예전 기본 운동 자리 그대로(새 이름으로). seed-8 · seed-12 · seed-21은 합쳐져서 비움.
+//  seed-0 … seed-53 : 예전 기본 운동 자리 그대로(새 이름으로). seed-8 · seed-12 · seed-21 · seed-73 · seed-78은 합쳐져서 비움.
 //  seed-54 …        : 새로 추가된 운동. 앞으로도 맨 뒤 번호로만 추가.
 import type { ExerciseKind, ExerciseToggle } from './types';
 
 export const TOGGLE_OPTIONS: Record<ExerciseToggle, readonly [string, string]> = {
   bar: ['바벨', '스미스'],
+  ez: ['바벨', '이지바'],
   machine: ['핀', '플레이트'],
   body: ['어시스트', '중량'],
 };
@@ -25,6 +27,8 @@ export const RETIRED_SEEDS: Record<string, { id: string; opt?: string }> = {
   'seed-8': { id: 'seed-9' },                       // 케이블 크로스오버 → 케이블 플라이
   'seed-12': { id: 'seed-11', opt: '어시스트' },     // 어시스트 딥스 → 딥스 (어시스트)
   'seed-21': { id: 'seed-20', opt: '어시스트' },     // 어시스트 풀업 → 풀업 (어시스트)
+  'seed-73': { id: 'seed-72', opt: '이지바' },       // 이지바 업라이트 로우 → 바벨 업라이트 로우 (이지바)  (v2.7.0)
+  'seed-78': { id: 'seed-31', opt: '이지바' },       // 이지바 컬 → 바벨 컬 (이지바)  (v2.7.0)
 };
 
 export interface CatalogEntry {
@@ -41,6 +45,9 @@ type Row = [n: number, name: string, toggle: ExerciseToggle | null, aka?: string
 
 const PREFIX: [string, string][] = [['바벨 ', '바벨'], ['덤벨 ', '덤벨'], ['이지바 ', '이지바'], ['케이블 ', '케이블'], ['머신 ', '머신']];
 const equipOf = (name: string, toggle: ExerciseToggle | null) => toggle === 'body' ? '맨몸' : PREFIX.find(([p]) => name.startsWith(p))?.[1] ?? '기타';
+
+/** v2.7.0에서 이지바 토글로 바뀐 기본 운동 (마이그레이션용) */
+export const EZ_CHANGED = ['seed-31', 'seed-37', 'seed-72', 'seed-81'] as const;
 
 const BY_PART: Record<string, Row[]> = {
   가슴: [
@@ -94,26 +101,24 @@ const BY_PART: Record<string, Row[]> = {
     [70, '덤벨 리어 델트 플라이', null, '벤트오버 레터럴 레이즈'],
     [71, '케이블 리어 델트 플라이', null],
     [30, '케이블 페이스 풀', null, '페이스 풀'],
-    [72, '바벨 업라이트 로우', 'bar', '업라이트 로우'],
-    [73, '이지바 업라이트 로우', null, '이지 바 업라이트 로우'],
+    [72, '바벨 업라이트 로우', 'ez', '업라이트 로우, 이지바 업라이트 로우, 이지 바 업라이트 로우'],
     [74, '케이블 업라이트 로우', null],
     [75, '케이블 익스터널 로테이션', null, '익스터널 로테이션'],
     [76, '바벨 슈러그', 'bar', '슈러그'],
     [77, '덤벨 슈러그', null],
   ],
   팔: [
-    [31, '바벨 컬', 'bar', '바벨 암 컬'],
-    [78, '이지바 컬', null, '이지 바 컬, 이지바 암 컬'],
+    [31, '바벨 컬', 'ez', '바벨 암 컬, 이지바 컬, 이지 바 컬, 이지바 암 컬'],
     [32, '덤벨 컬', null, '덤벨 암 컬'],
     [33, '덤벨 해머 컬', null, '해머 컬'],
     [79, '덤벨 인클라인 컬', null, '인클라인 덤벨 컬'],
     [34, '케이블 컬', null, '케이블 암 컬'],
     [80, '케이블 해머 컬', null, '로프 해머 컬, 케이블 로프 해머 컬'],
-    [81, '이지바 프리처 컬', null, '프리처 컬'],
+    [81, '바벨 프리처 컬', 'ez', '프리처 컬, 이지바 프리처 컬'],
     [82, '머신 컬', 'machine', '머신 암 컬, 머신 프리처 컬'],
     [35, '케이블 푸시다운', null, '트라이셉스 푸시다운, 케이블 트라이셉스 푸시다운'],
     [36, '케이블 로프 푸시다운', null, '로프 푸시다운'],
-    [37, '이지바 라잉 트라이셉스 익스텐션', null, '이지 바 라잉 트라이셉스 익스텐션, 스컬 크러셔, 라잉 트라이셉스 익스텐션'],
+    [37, '바벨 라잉 트라이셉스 익스텐션', 'ez', '이지바 라잉 트라이셉스 익스텐션, 이지 바 라잉 트라이셉스 익스텐션, 스컬 크러셔, 라잉 트라이셉스 익스텐션, 라트익'],
     [38, '덤벨 오버헤드 트라이셉스 익스텐션', null, '오버헤드 트라이셉스 익스텐션'],
     [83, '케이블 오버헤드 트라이셉스 익스텐션', null],
     [84, '머신 트라이셉스 익스텐션', 'machine'],
@@ -174,7 +179,7 @@ export const kindFor = (toggle: ExerciseToggle | null, opt?: string): ExerciseKi
 /** 옵션을 고른 때의 제목: 바벨 런지 → 스미스 런지 / 머신 레그 프레스 (핀) / 어시스트 딥스 */
 export function optionTitle(name: string, toggle: ExerciseToggle | null | undefined, opt: string | undefined): string {
   if (!toggle || !opt) return name;
-  if (toggle === 'bar') return opt === '바벨' ? name : name.replace(/^바벨 /, opt + ' ');
+  if (toggle === 'bar' || toggle === 'ez') return opt === '바벨' ? name : name.replace(/^바벨 /, opt + ' ');
   if (toggle === 'machine') return `${name} (${opt})`;
   return `${opt} ${name}`;
 }

@@ -3,8 +3,8 @@
 //    바꿔야 하면 src/domain/migrations.ts 에 변환 단계를 추가하세요.
 
 export type ExerciseKind = 'normal' | 'assist' | 'bodyweight';
-/** 장비 토글 종류: bar = 바벨·스미스, machine = 핀·플레이트, body = 어시스트·중량 (domain/catalog.ts) */
-export type ExerciseToggle = 'bar' | 'machine' | 'body';
+/** 장비 토글 종류: bar = 바벨·스미스, ez = 바벨·이지바, machine = 핀·플레이트, body = 어시스트·중량 (domain/catalog.ts) */
+export type ExerciseToggle = 'bar' | 'ez' | 'machine' | 'body';
 export type SetType = 'N' | 'W' | 'F' | 'D';
 
 export interface Exercise {

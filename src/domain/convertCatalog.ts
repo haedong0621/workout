@@ -12,10 +12,11 @@ export interface ConvertResult extends ConvertInput { map: MapRow[]; unknown: st
 const byId = new Map(CATALOG.map((e) => [e.id, e]));
 
 /** 이름에 붙은 옵션 표시를 떼어 낸 이름과 그 옵션 */
-function splitOption(name: string): { base: string; opt?: string } {
+function splitOption(raw: string): { base: string; opt?: string } {
+  const name = raw.replace(/이지 바/g, '이지바');
   const m = name.match(/\s*\((핀|플레이트)\)\s*$/);
   if (m) return { base: name.slice(0, m.index).trim(), opt: m[1] };
-  for (const o of ['스미스', '어시스트', '중량']) if (name.startsWith(o + ' ')) return { base: name.slice(o.length + 1), opt: o };
+  for (const o of ['스미스', '이지바', '어시스트', '중량']) if (name.startsWith(o + ' ')) return { base: name.slice(o.length + 1), opt: o };
   return { base: name };
 }
 
@@ -27,7 +28,7 @@ function decideOpt(e: CatalogEntry, ex: Exercise, fromName: string | undefined, 
   if (a) return { opt: a, how: '알려 준 값' };
   if (ok(fromName)) return { opt: fromName, how: '이름' };
   if (e.toggle === 'body') return { opt: ex.kind === 'bodyweight' ? '중량' : '어시스트', how: '무게 방식' };
-  if (e.toggle === 'bar') return { opt: '바벨', how: '기본(바벨)' };
+  if (e.toggle === 'bar' || e.toggle === 'ez') return { opt: '바벨', how: '기본(바벨)' };
   return { how: '모름' };
 }
 

@@ -1,10 +1,10 @@
 // 운동 선택 시트 (검색·초성·부위·장비 필터, 새 운동 만들기)
 import { useMemo, useState } from 'preact/hooks';
 import { EQUIPS, PARTS } from '@/domain/constants';
-import { matchExercise } from '@/domain/search';
+import { matchExercise, matchName } from '@/domain/search';
 import { TOGGLE_OPTIONS } from '@/domain/catalog';
 import type { Exercise } from '@/domain/types';
-import { sortedExercises } from '@/store';
+import { exName, sortedExercises } from '@/store';
 import { ChipRow, EmptyState } from '@/ui/controls';
 import { Icon } from '@/ui/Icon';
 import { openSheet, type CloseFn } from '@/ui/sheet';
@@ -25,8 +25,8 @@ export function filterExercises(list: readonly Exercise[], f: { q: string; part:
     !f.exclude?.includes(e.id)
     && (!f.favOnly || e.fav)
     && (f.part === ALL || e.part === f.part)
-    && (f.equip === ALL || e.equip === f.equip)
-    && matchExercise(e, f.q));
+    && (f.equip === ALL || e.equip === f.equip || (f.equip === '이지바' && e.toggle === 'ez'))
+    && (matchExercise(e, f.q) || matchName(exName(e), f.q)));
 }
 
 function PickerBody({ multi, exclude, close }: { multi: boolean; exclude: readonly string[]; close: CloseFn<string[]> }) {
@@ -69,7 +69,7 @@ function PickerBody({ multi, exclude, close }: { multi: boolean; exclude: readon
               <button key={e.id} class={'pick-item' + (on ? ' on' : '')} type="button" onClick={() => (multi ? toggle(e.id) : close([e.id]))}>
                 <ExThumb ex={e} size={44} />
                 <div class="pick-text">
-                  <div class="pick-name">{e.name}</div>
+                  <div class="pick-name">{exName(e)}</div>
                   <div class="sub">{exerciseSubtitle(e)}</div>
                 </div>
                 {multi && <div class={'pick-check' + (on ? ' on' : '')}>{on && <Icon name="check" size={16} />}</div>}

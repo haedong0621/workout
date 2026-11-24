@@ -6,7 +6,7 @@ import { moveItem } from '@/domain/workout';
 import { clone } from '@/lib/clone';
 import { clamp } from '@/lib/num';
 import { pickImageFile, processImage } from '@/services/imageFile';
-import { exerciseMap, findById, replaceImage, routineActions } from '@/store';
+import { exName, exerciseMap, findById, replaceImage, routineActions } from '@/store';
 import { back, type RouteProps } from '@/app/router';
 import { EmptyState, MiniStepper } from '@/ui/controls';
 import { choiceSheet, confirmSheet } from '@/ui/dialogs';
@@ -15,7 +15,7 @@ import { openSheet } from '@/ui/sheet';
 import { ExThumb, RoutineThumb } from '@/ui/thumbs';
 import { useSortable } from '@/ui/sortable';
 import { toast } from '@/ui/toast';
-import { pickExercises } from '../exercises/ExercisePicker';
+import { exerciseSubtitle, pickExercises } from '../exercises/ExercisePicker';
 
 interface ImageEdit { blob: Blob; url: string }
 
@@ -110,10 +110,10 @@ export function RoutineEditPage({ params }: RouteProps) {
           if (!ex) return null;
           const step = (delta: number) => setItems((items) => items.map((x, j) => (j === i ? { ...x, setCount: clamp((x.setCount || DEFAULT_SET_COUNT) + delta, 1, MAX_SET_COUNT) } : x)));
           return (
-            <div key={it.exerciseId} class="ritem" {...sort.bind(i)}>
+            <div key={`${it.exerciseId}|${it.opt ?? ''}`} class="ritem" {...sort.bind(i)}>
               <div class="ritem-main">
                 <ExThumb ex={ex} size={44} />
-                <div class="grow"><div class="ritem-name">{ex.name}</div><div class="sub">{ex.part} · {ex.equip}</div></div>
+                <div class="grow"><div class="ritem-name">{exName(ex, it.opt)}</div><div class="sub">{exerciseSubtitle(ex)}</div></div>
               </div>
               <div class="ritem-ctl">
                 <MiniStepper onMinus={() => step(-1)} onPlus={() => step(1)} minusLabel="세트 줄이기" plusLabel="세트 늘리기">{it.setCount || DEFAULT_SET_COUNT}세트</MiniStepper>

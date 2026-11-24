@@ -4,7 +4,7 @@ import { exerciseHistory, lastUsedOption, metricOf, personalRecords, pinnedFirst
 import { TOGGLE_OPTIONS } from '@/domain/catalog';
 import { fmtMD, fmtNum, fmtYMD } from '@/lib/format';
 import { pickImageFile, processImage } from '@/services/imageFile';
-import { exerciseActions, exerciseMap, imgURL, includeWarmup, replaceImage, restFor, sessions } from '@/store';
+import { exName, exerciseActions, exerciseMap, imgURL, includeWarmup, replaceImage, restFor, sessions } from '@/store';
 import { back, go, paths, type RouteProps } from '@/app/router';
 import { Card, DiffBadge, EmptyState, MiniStepper, Segmented, StatTile, TopBar } from '@/ui/controls';
 import { confirmSheet } from '@/ui/dialogs';
@@ -66,7 +66,7 @@ export function ExerciseDetailPage({ params }: RouteProps) {
           {url ? <img src={url} alt="" /> : <ExThumb ex={ex} size={120} />}
           <span class="thumb-edit"><Icon name="image" size={14} /></span>
         </button>
-        <div class="hero-name">{ex.name}</div>
+        <div class="hero-name">{exName(ex, opt)}</div>
         <div class="chips center">
           <span class="tag">{ex.part}</span>
           <span class="tag">{ex.toggle ? TOGGLE_OPTIONS[ex.toggle].join('/') : ex.equip}</span>

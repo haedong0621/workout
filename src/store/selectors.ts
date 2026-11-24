@@ -1,6 +1,7 @@
 // 상태에서 계산되는 값들. computed라서 원본이 바뀔 때만 다시 계산돼요.
 import { computed } from '@preact/signals';
-import { usageCounts } from '@/domain/history';
+import { lastOptionMap, usageCounts } from '@/domain/history';
+import { optionTitle } from '@/domain/catalog';
 import type { Exercise, Session } from '@/domain/types';
 import { exercises, routines, sessions, settings } from './core';
 
@@ -40,3 +41,9 @@ export const routineLastRun = computed(() => {
 
 export const includeWarmup = computed(() => settings.value.includeWarmup);
 export const restFor = (ex: Pick<Exercise, 'rest'> | undefined | null): number => ex?.rest || settings.value.restDefault;
+
+/** 운동별 마지막에 쓴 토글 옵션 */
+export const lastOptions = computed(() => lastOptionMap(sessions.value));
+/** 목록에 보이는 이름: 마지막에 쓴 옵션 이름 (예: 스미스 벤치 프레스, 이지바 컬). opt를 주면 그 옵션으로 */
+export const exName = (ex: Pick<Exercise, 'id' | 'name' | 'toggle'>, opt?: string): string =>
+  optionTitle(ex.name, ex.toggle, opt ?? lastOptions.value.get(ex.id));

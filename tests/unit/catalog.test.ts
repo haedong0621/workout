@@ -21,7 +21,7 @@ describe('기본 운동 목록 규칙', () => {
       if (e.toggle === 'body') { expect(e.equip).toBe('맨몸'); continue; }
       expect(['바벨', '덤벨', '이지바', '케이블', '머신']).toContain(e.equip);
       expect(e.name.startsWith(e.equip + ' ')).toBe(true);
-      if (e.toggle === 'bar') expect(e.equip).toBe('바벨');
+      if (e.toggle === 'bar' || e.toggle === 'ez') expect(e.equip).toBe('바벨');
       if (e.toggle === 'machine') expect(e.equip).toBe('머신');
       if (['덤벨', '케이블', '이지바'].includes(e.equip)) expect(e.toggle).toBeNull();
     }
@@ -32,11 +32,13 @@ describe('기본 운동 목록 규칙', () => {
     expect(optionTitle('바벨 런지', 'bar', '바벨')).toBe('바벨 런지');
     expect(optionTitle('머신 레그 프레스', 'machine', '핀')).toBe('머신 레그 프레스 (핀)');
     expect(optionTitle('딥스', 'body', '어시스트')).toBe('어시스트 딥스');
+    expect(optionTitle('바벨 컬', 'ez', '이지바')).toBe('이지바 컬');
   });
   it('다른 이름으로도 찾음 (띄어쓰기·표기 무시)', () => {
     expect(findCatalog('펙덱 플라이')?.name).toBe('머신 플라이');
     expect(findCatalog('리버스 펙덱 플라이')?.name).toBe('머신 리어 델트 플라이');
-    expect(findCatalog('이지 바 컬')?.name).toBe('이지바 컬');
+    expect(findCatalog('이지 바 컬')?.name).toBe('바벨 컬');
+    expect(findCatalog('라트익')?.name).toBe('바벨 라잉 트라이셉스 익스텐션');
     expect(findCatalog('케이블 푸쉬 다운')?.name).toBe('케이블 푸시다운');
     expect(findCatalog('인클라인 덤벨 프레스')?.name).toBe('덤벨 인클라인 벤치 프레스');
   });
@@ -98,8 +100,8 @@ describe('운동 중 장비 토글', async () => {
     done('a', 100, [{ opt: '바벨', sets: [{ w: 100, r: 5, t: 'N', done: true }] }]),
     done('b', 200, [{ opt: '스미스', sets: [{ w: 70, r: 8, t: 'N', done: true }] }]),
   ];
-  it('새 기본 목록 98개, 토글·다른 이름 포함', () => {
-    expect(all.length).toBe(98);
+  it('새 기본 목록 96개, 토글·다른 이름 포함', () => {
+    expect(all.length).toBe(96);
     expect(bench).toMatchObject({ id: 'seed-0', toggle: 'bar' });
     expect(dips).toMatchObject({ toggle: 'body', kind: 'assist' });
   });
@@ -129,5 +131,40 @@ describe('운동 중 장비 토글', async () => {
     expect(exerciseHistory(all3, bench.id, { opt: { toggle: 'bar', value: '바벨' } }).map((e) => e.sessionId)).toEqual(['o', 'a']);
     expect(exerciseHistory(all3, bench.id, { opt: { toggle: 'bar', value: '스미스' } }).map((e) => e.sessionId)).toEqual(['b']);
     expect(exerciseHistory(all3, bench.id).length).toBe(3);
+  });
+});
+
+describe('v2.7.0 마이그레이션: 이지바 → 바벨 운동의 이지바 옵션', async () => {
+  const { migrate, MIGRATIONS } = await import('@/domain/migrations');
+  const { seedExercises } = await import('@/domain/seed');
+  it('이지바 컬 기록 → 바벨 컬 [이지바], 라트익 → 이지바 옵션, 메모 합침', () => {
+    // v2.6.0 모양: 이지바 컬(seed-78)이 따로 있던 목록
+    const ex = seedExercises(0).map((e) => ({ ...e })) as unknown as Record<string, unknown>[];
+    const find = (id: string) => ex.find((e) => e.id === id)!;
+    Object.assign(find('seed-31'), { name: '바벨 컬', toggle: 'bar' });
+    Object.assign(find('seed-37'), { name: '이지바 라잉 트라이셉스 익스텐션', toggle: null, equip: '이지바' });
+    ex.push({ id: 'seed-78', name: '이지바 컬', part: '팔', equip: '이지바', kind: 'normal', toggle: null, aka: [], memo: '20kg 15x3', rest: 60, fav: true, pinned: ['s1'], seed: true, createdAt: 0, imageId: null, memoAt: 5 });
+    const data = {
+      exercises: ex,
+      routines: [{ id: 'r', name: '팔', items: [{ exerciseId: 'seed-78', setCount: 3 }, { exerciseId: 'seed-37', setCount: 3 }] }],
+      sessions: [{ id: 's1', status: 'done', startedAt: 1, bw: 80, items: [
+        { exerciseId: 'seed-78', name: '이지바 컬', part: '팔', equip: '이지바', kind: 'normal', sets: [{ w: 20, r: 15, t: 'N', done: true }] },
+        { exerciseId: 'seed-37', name: '이지바 라잉 트라이셉스 익스텐션', part: '팔', equip: '이지바', kind: 'normal', sets: [] },
+      ] }],
+      body: [], settings: {},
+    };
+    const r = migrate(data, 1, MIGRATIONS).data;
+    expect(r.exercises.some((e) => e.id === 'seed-78')).toBe(false);
+    expect(r.exercises.find((e) => e.id === 'seed-31')).toMatchObject({ name: '바벨 컬', toggle: 'ez', fav: true, rest: 60, pinned: ['s1'] });
+    expect(r.exercises.find((e) => e.id === 'seed-31')!.memo).toBe('20kg 15x3');
+    expect(r.exercises.find((e) => e.id === 'seed-37')).toMatchObject({ name: '바벨 라잉 트라이셉스 익스텐션', toggle: 'ez', equip: '바벨' });
+    const items = r.sessions[0]!.items as Record<string, unknown>[];
+    expect(items[0]).toMatchObject({ exerciseId: 'seed-31', opt: '이지바', name: '이지바 컬' });
+    expect(items[1]).toMatchObject({ exerciseId: 'seed-37', opt: '이지바', name: '이지바 라잉 트라이셉스 익스텐션' });
+    expect(r.routines[0]!.items).toEqual([{ exerciseId: 'seed-31', setCount: 3, opt: '이지바' }, { exerciseId: 'seed-37', setCount: 3, opt: '이지바' }]);
+  });
+  it('예전(v2.5 이전) 목록 데이터는 건드리지 않음', () => {
+    const data = { exercises: [{ id: 'seed-0', name: '벤치 프레스', seed: true }], routines: [], sessions: [], body: [], settings: {} };
+    expect(migrate(structuredClone(data), 1, MIGRATIONS).data).toEqual(data);
   });
 });

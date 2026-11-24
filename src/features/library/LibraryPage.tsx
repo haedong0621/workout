@@ -1,7 +1,7 @@
 // 종목 목록 (검색·필터·즐겨찾기)
 import { useMemo, useState } from 'preact/hooks';
 import { EQUIPS, PARTS } from '@/domain/constants';
-import { sortedExercises } from '@/store';
+import { exName, sortedExercises } from '@/store';
 import { go, paths } from '@/app/router';
 import { Chip, ChipRow, EmptyState } from '@/ui/controls';
 import { Icon } from '@/ui/Icon';
@@ -45,7 +45,7 @@ export function LibraryPage() {
         {items.map((e) => (
           <button key={e.id} class="list-item" type="button" onClick={() => go(paths.exercise(e.id))}>
             <ExThumb ex={e} size={44} />
-            <div class="grow"><div class="li-title">{e.name}</div><div class="sub">{exerciseSubtitle(e)}</div></div>
+            <div class="grow"><div class="li-title">{exName(e)}</div><div class="sub">{exerciseSubtitle(e)}</div></div>
             {e.fav && <span class="star on"><Icon name="star" size={18} /></span>}
             <Icon name="chevron" size={18} />
           </button>

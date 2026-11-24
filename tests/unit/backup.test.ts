@@ -6,8 +6,8 @@ import v1 from '../fixtures/v1-backup.json';
 describe('이전 앱(v1.0.6)이 만든 백업 파일', () => {
   const p = parseBackup(v1);
   it('모든 항목을 읽음', () => {
-    // 예전 기본 목록(54) + 직접 만든 1 → 새 기본 목록(98) + 직접 만든 1 로 옮겨짐
-    expect(p.counts).toEqual({ exercises: 99, routines: 1, sessions: 2, body: 2, images: 1 });
+    // 예전 기본 목록(54) + 직접 만든 1 → 새 기본 목록(96) + 직접 만든 1 로 옮겨짐
+    expect(p.counts).toEqual({ exercises: 97, routines: 1, sessions: 2, body: 2, images: 1 });
   });
   it('세부 값 유지', () => {
     const bench = p.exercises.find((e) => e.name === '바벨 벤치 프레스')!;

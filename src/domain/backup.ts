@@ -81,7 +81,7 @@ export function parseBackup(obj: unknown, migrations: readonly Migration[] = MIG
   // 진행 중이던 운동은 가져오지 않아요
   let sessions = normalizeList(d.sessions, normalizeSession).filter((s) => s.status === 'done');
   // 예전(v2.6 이전) 기본 목록으로 만든 백업이면 새 기본 목록·이름 규칙으로 옮김
-  if (raw.exercises.some((e) => e.seed === true && !('toggle' in e))) {
+  if (raw.exercises.some((e) => e.seed === true) && !raw.exercises.some((e) => e.seed === true && !!e.toggle)) {
     ({ exercises, routines, sessions } = convertToCatalog({ exercises, routines, sessions }));
   }
   const body = normalizeList(d.body, normalizeBody);

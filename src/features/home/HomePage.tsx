@@ -3,7 +3,7 @@ import { sessionStats } from '@/domain/volume';
 import type { Routine } from '@/domain/types';
 import { fmtDur, fmtMD, fmtNum } from '@/lib/format';
 import { isIOS, isStandalone } from '@/services/viewport';
-import { activeSession, doneSessions, exerciseMap, includeWarmup, routines, setSetting, settings } from '@/store';
+import { activeSession, exName, doneSessions, exerciseMap, includeWarmup, routines, setSetting, settings } from '@/store';
 import { go, paths } from '@/app/router';
 import { Elapsed } from '@/ui/Clock';
 import { EmptyState } from '@/ui/controls';
@@ -101,7 +101,7 @@ function routineSheet(r: Routine) {
             return (
               <div key={i} class="rs-item">
                 <ExThumb ex={ex} size={38} />
-                <div class="grow">{ex.name}</div>
+                <div class="grow">{exName(ex, it.opt)}</div>
                 <span class="sub">{it.setCount || 3}세트</span>
               </div>
             );
