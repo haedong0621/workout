@@ -11,6 +11,8 @@ export const MATERIALS = {
   steel:  ['#e6ebf0', '#c4ccd4', '#a1abb5', '#7c8792', '#4f5862'],
   plate:  ['#8a96a2', '#66717d', '#4a535d', '#353c44', '#1e2328'],
   bar:    ['#ffffff', '#e1e6eb', '#bcc4cc', '#929ca6', '#5d6670'],
+  // 루틴 그림: 강조 부위 (앱 부위 색 기준)
+  hlChest: ['#ffc4c4', '#ff9696', '#ff6b6b', '#d84848', '#8f2626'],
   floor:  ['#eef1f4', '#dfe4e9', '#cfd6dd', '#b7c0c9', '#9aa4ae'],
 } as const satisfies Record<string, readonly [string, string, string, string, string]>;
 

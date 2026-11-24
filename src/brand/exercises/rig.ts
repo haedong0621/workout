@@ -12,7 +12,17 @@ export const MAT = { skin: 'skin', hair: 'hair', tank: 'tank', shorts: 'shorts',
 
 const hash = (x: number, y: number, z: number) => { const s = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719) * 43758.5453; return s - Math.floor(s); };
 
-export function human(pose: Pose): { shapes: Shape[]; marks: Marker[] } {
+/** 강조할 수 있는 부위(루틴 그림용) */
+export type Region = 'chest';
+export interface HumanOptions {
+  /** 상의: 나시(기본) / 없음(근육이 보이게) */
+  top?: 'tank' | 'none';
+  /** 부위별 강조 색 재질 */
+  hl?: Partial<Record<Region, MatName>>;
+}
+
+export function human(pose: Pose, opts: HumanOptions = {}): { shapes: Shape[]; marks: Marker[] } {
+  const topMat: MatName = opts.top === 'none' ? 'skin' : 'tank';
   const s: Shape[] = [];
   const { head, neck, face } = pose;
   const front = norm(pose.chest ?? face);
@@ -24,10 +34,11 @@ export function human(pose: Pose): { shapes: Shape[]; marks: Marker[] } {
 
   // ── 몸통(나시): 좌우 막대 + 가슴 두 덩이 + 배를 한 덩어리로
   const inset = (a: V, m: V, k: number) => lerp(a, m, k);
+  const pecs = [pose.L.sh, pose.R.sh].map((sh) => add(lerp(inset(sh, shMid, 0.45), pelvis, 0.2), mul(front, 0.38)));
   const torsoParts = [
     capsule(inset(pose.L.hip, pelvis, 0.3), inset(pose.L.sh, shMid, 0.3), 0.92, 'tank'),
     capsule(inset(pose.R.hip, pelvis, 0.3), inset(pose.R.sh, shMid, 0.3), 0.92, 'tank'),
-    ...[pose.L.sh, pose.R.sh].map((sh) => sphere(add(lerp(inset(sh, shMid, 0.45), pelvis, 0.2), mul(front, 0.38)), 0.78, 'tank')), // 가슴
+    ...pecs.map((c) => sphere(c, 0.78, 'tank')),                                                                                // 가슴
     sphere(add(lerp(shMid, pelvis, 0.62), mul(front, 0.12)), 0.92, 'tank'),                                                       // 배
   ];
   const torsoId = newId();
@@ -35,6 +46,17 @@ export function human(pose: Pose): { shapes: Shape[]; marks: Marker[] } {
     const t = dot(sub(p, pelvis), spine) / len(sub(shMid, pelvis));
     if (t < 0.1) return 'shorts';
     if (t < 0.16) return { mat: 'shorts', line: true };                 // 허리 밴드 선
+    // 강조: 가슴 (가슴 두 덩이 근처, 앞쪽)
+    if (opts.hl?.chest && dot(sub(p, pelvis), front) > 0.05) {
+      // 가슴근: 쇄골 아래 ~ 아래 선은 겨드랑이 쪽으로 올라감, 가운데(흉골)는 비움
+      const u = Math.abs(dot(sub(p, shMid), across)), h = dot(sub(p, shMid), spine);
+      if (u > 0.07 && u < 1.65 && h < -0.22 - 0.05 * u && h > -2.25 + 0.75 * u) return opts.hl.chest;
+    }
+    if (topMat === 'skin') {
+      // 맨몸: 복근 가운데 선
+      if (Math.abs(dot(sub(p, pelvis), across)) < 0.05 && dot(sub(p, pelvis), front) > 0.4 && t > 0.2 && t < 0.62) return { mat: 'skin', line: true };
+      return 'skin';
+    }
     // 나시 목둘레(앞쪽 파임)
     const toNeck = sub(p, neckBase);
     if (len(toNeck) < 0.95 && dot(toNeck, front) > -0.2) return 'skin';
