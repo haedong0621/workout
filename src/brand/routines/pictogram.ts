@@ -165,6 +165,6 @@ export function drawPicto(spec: PictoSpec): Grid {
     const piece = l >= 0 ? pieces[l % 64] : undefined;
     g[y]![x] = piece?.group && on.has(piece.group) ? 'r' : 'f';
   }
-  for (const [a, b] of SKIN_LINES) for (const [x, y] of lineCells(a, b)) if (sil[y]?.[x] === 2) g[y]![x] = 'L';
+  for (const [a, b] of SKIN_LINES) for (const [x, y] of lineCells(a!, b!)) if (sil[y]?.[x] === 2) g[y]![x] = 'L';
   return g;
 }
