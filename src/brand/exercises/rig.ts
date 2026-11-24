@@ -1,6 +1,6 @@
 // 사람 인형: 관절 위치(자세)만 주면 몸을 도형으로 만든다. 모든 운동이 같은 사람을 쓴다.
 // 옷: 검정 나시 · 회색 반바지 · 검정 운동화(흰 밑창)
-import { add, blend, capsule, dot, ellipsoid, len, lerp, mul, newId, norm, rbox, sphere, sub, type Marker, type Shape, type V } from './iso.ts';
+import { add, blend, capsule, cross, dot, ellipsoid, len, lerp, mul, newId, norm, rbox, sphere, sub, type Marker, type Shape, type V } from './iso.ts';
 import type { MatName } from './palette.ts';
 
 type Side = { sh: V; el: V; ha: V; hip: V; kn: V; an: V; toe: V };
@@ -99,13 +99,16 @@ export function human(pose: Pose, opts: HumanOptions = {}): { shapes: Shape[]; m
     s.push(capsule(side.kn, lerp(side.kn, side.an, 0.4), 0.52, 'skin', lid, 0.5));                        // 종아리 볼륨
     s.push(capsule(lerp(side.kn, side.an, 0.4), side.an, 0.5, 'skin', lid, 0.32));
     // 운동화: 발목 → 발끝, 위는 검정, 바닥은 흰 밑창
-    const heel: V = [side.an[0], side.an[1], 0.42];
-    const toe: V = [side.toe[0], side.toe[1], 0.38];
+    // 발이 바닥에 있을 때(발목 z = 1.0) 뒤꿈치 0.42 · 발끝 = toe - 0.02. 발이 떠 있어도 같은 모양으로 따라감
+    const heel: V = [side.an[0], side.an[1], side.an[2] - 0.58];
+    const toe: V = [side.toe[0], side.toe[1], side.toe[2] - 0.02];
     const dir = norm(sub(toe, heel));
+    const soleN = norm(cross(cross(dir, [0, 0, 1]), dir));          // 신발 바닥 반대쪽(발등 방향)
+    const soleH = (p: V) => dot(sub(p, heel), soleN.every((v) => Number.isFinite(v)) && len(soleN) > 0.5 ? soleN : [0, 0, 1]);
     s.push(blend([
       capsule(add(heel, mul(dir, -0.1)), toe, 0.42, 'shoe', undefined, 0.36),
-      sphere([side.an[0], side.an[1], 0.75], 0.42, 'shoe'),
-    ], 0.3, (p) => (p[2] < 0.14 ? 'sole' : p[2] < 0.2 ? { mat: 'sole', line: true } : 'shoe'), lid));
+      sphere([side.an[0], side.an[1], side.an[2] - 0.25], 0.42, 'shoe'),
+    ], 0.3, (p) => { const h = soleH(p); return h < -0.28 ? 'sole' : h < -0.22 ? { mat: 'sole', line: true } : 'shoe'; }, lid));
   }
   // 얼굴 점: 눈·눈썹 (보일 때만 찍힘)
   const marks: Marker[] = [];
