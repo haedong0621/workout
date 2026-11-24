@@ -34,7 +34,6 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
   collapsedGroups: [],
 });
 
-export const ROUTINE_EMOJIS = ['💪', '🏋️', '🔥', '⚡', '🦵', '🍑', '🫁', '🦾', '🧘', '🏃', '🚴', '🤸', '🥇', '🎯', '🧱', '🦍', '🐺', '🦁', '🐯', '🚀', '🌙', '☀️', '🍖', '😤'];
 export const DEFAULT_ROUTINE_EMOJI = '💪';
 
 export const REST_PRESETS = [30, 45, 60, 90, 120, 150, 180, 240];

@@ -3,6 +3,7 @@
 // 원본에 있던 "모르는 필드"는 지우지 않고 그대로 둡니다(앞으로 추가될 기능과의 호환).
 import { DEFAULT_ROUTINE_EMOJI, DEFAULT_SETTINGS } from './constants';
 import type { BodyEntry, Exercise, ExerciseKind, Routine, RoutineGroup, Session, SessionItem, SetType, Settings, WorkoutSet } from './types';
+import { routineArtById } from './routineArt';
 import { toNum } from '@/lib/num';
 
 type Raw = Record<string, unknown>;
@@ -48,6 +49,7 @@ export function normalizeRoutine(v: unknown): Routine | null {
     imageId: strOrNull(v.imageId),
     createdAt: toNum(v.createdAt, 0),
     groupId: strOrNull(v.groupId),
+    art: routineArtById(strOrNull(v.art)) ? str(v.art) : null,
     ...(Number.isFinite(toNum(v.order, NaN)) ? { order: toNum(v.order, 0) } : {}),
     items: items.filter(isObj).filter((it) => it.exerciseId).map((it) => ({
       ...it,

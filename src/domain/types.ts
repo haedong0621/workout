@@ -49,6 +49,8 @@ export interface Routine {
   groupId?: string | null;
   /** 홈에서 끌어서 정한 순서(작을수록 위). 없으면 최근에 한 순 */
   order?: number;
+  /** 고른 루틴 그림(routineArt.ts 의 id). 없으면 운동 부위로 자동 추천. 사진(imageId)이 있으면 사진이 우선 */
+  art?: string | null;
 }
 
 /** 루틴 그룹 — 사용자가 직접 만들고 이름 짓는 묶음 */

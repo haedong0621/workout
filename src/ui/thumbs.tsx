@@ -1,5 +1,6 @@
 import type { Exercise, Routine } from '@/domain/types';
-import { imgURL } from '@/store';
+import { recommendArt, routineArtById } from '@/domain/routineArt';
+import { exerciseMap, imgURL } from '@/store';
 import { exerciseArt } from './exerciseArt';
 
 export const PART_COLOR: Record<string, string> = {
@@ -25,13 +26,17 @@ export function ExThumb({ ex, size = 46, url }: { ex: Pick<Exercise, 'imageId' |
   return <div class="thumb" style={{ ...style, background: c + '2b', color: c }}><span>{EQUIP_EMOJI[ex.equip] ?? '🏋️'}</span></div>;
 }
 
-export function RoutineThumb({ r, size = 56, url }: { r: Pick<Routine, 'emoji' | 'imageId'>; size?: number; url?: string | null }) {
+/** 루틴 그림 주소: 고른 그림, 없으면 운동 부위로 추천 */
+export function routineArtURL(r: Pick<Routine, 'art' | 'items'>): string {
+  const id = routineArtById(r.art)?.id ?? recommendArt(r.items, exerciseMap.value);
+  return `./routines/${id}.png`;
+}
+
+export function RoutineThumb({ r, size = 56, url }: { r: Pick<Routine, 'imageId' | 'art' | 'items'>; size?: number; url?: string | null }) {
   const src = url !== undefined ? url : imgURL(r.imageId);
-  return (
-    <div class="thumb round" style={{ width: size + 'px', height: size + 'px', fontSize: Math.round(size * 0.5) + 'px' }}>
-      {src ? <img src={src} alt="" draggable={false} /> : <span>{r.emoji || '💪'}</span>}
-    </div>
-  );
+  const style = { width: size + 'px', height: size + 'px' };
+  if (src) return <div class="thumb round" style={style}><img src={src} alt="" draggable={false} /></div>;
+  return <div class="thumb round routine-art" style={style}><img src={routineArtURL(r)} alt="" draggable={false} /></div>;
 }
 
 export function PartPills({ byPart, suffix = '' }: { byPart: Record<string, number>; suffix?: string }) {

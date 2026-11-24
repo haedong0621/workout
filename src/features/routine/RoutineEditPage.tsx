@@ -1,21 +1,22 @@
 // 루틴 만들기/수정
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { DEFAULT_ROUTINE_EMOJI, DEFAULT_SET_COUNT, MAX_SET_COUNT, ROUTINE_EMOJIS } from '@/domain/constants';
+import { DEFAULT_SET_COUNT, MAX_SET_COUNT } from '@/domain/constants';
+import { recommendArt, routineArtById } from '@/domain/routineArt';
 import type { Routine } from '@/domain/types';
 import { moveItem } from '@/domain/workout';
 import { clone } from '@/lib/clone';
 import { clamp } from '@/lib/num';
-import { pickImageFile, processImage } from '@/services/imageFile';
 import { exName, exerciseMap, findById, replaceImage, routineActions } from '@/store';
 import { back, type RouteProps } from '@/app/router';
 import { EmptyState, MiniStepper } from '@/ui/controls';
-import { choiceSheet, confirmSheet } from '@/ui/dialogs';
+import { confirmSheet } from '@/ui/dialogs';
 import { Icon } from '@/ui/Icon';
 import { openSheet } from '@/ui/sheet';
 import { ExThumb, RoutineThumb } from '@/ui/thumbs';
 import { useSortable } from '@/ui/sortable';
 import { toast } from '@/ui/toast';
 import { exerciseSubtitle, pickExercises } from '../exercises/ExercisePicker';
+import { ArtPicker } from './ArtPicker';
 
 interface ImageEdit { blob: Blob; url: string }
 
@@ -38,30 +39,14 @@ export function RoutineEditPage({ params }: RouteProps) {
   const thumbURL = img?.url ?? (removeImg ? null : undefined);
 
   async function changeThumb() {
-    const c = await choiceSheet({
-      title: '루틴 이미지',
-      options: [
-        { label: '이모지 고르기', value: 'emoji', icon: 'star' },
-        { label: '사진·움짤 올리기', value: 'photo', icon: 'image' },
-        { label: '기본 이모지로 되돌리기', value: 'reset', icon: 'back' },
-      ],
-    });
-    const clearImage = () => { setImg(null); if (d.imageId) setRemoveImg(true); };
-    if (c === 'emoji') {
-      const e = await openSheet<string>({
-        title: '이모지 선택',
-        render: (close) => <div class="emoji-grid">{ROUTINE_EMOJIS.map((x) => <button key={x} type="button" class="emoji-btn" onClick={() => close(x)}>{x}</button>)}</div>,
-      });
-      if (e) { set({ emoji: e }); clearImage(); }
-    } else if (c === 'photo') {
-      const f = await pickImageFile();
-      if (!f) return;
-      try {
-        const { blob } = await processImage(f, 480);
-        setImg({ blob, url: URL.createObjectURL(blob) });
-        setRemoveImg(false);
-      } catch { toast('이미지를 불러오지 못했어요'); }
-    } else if (c === 'reset') { set({ emoji: DEFAULT_ROUTINE_EMOJI }); clearImage(); }
+    const rec = recommendArt(d.items, exerciseMap.value);
+    const hasPhoto = !!img || (!!d.imageId && !removeImg);
+    const cur = hasPhoto ? null : (routineArtById(d.art)?.id ?? rec);
+    const id = await openSheet<string>({ title: '루틴 그림', render: (close) => <ArtPicker current={cur} recommended={rec} onPick={close} /> });
+    if (!id) return;
+    set({ art: id });
+    setImg(null);
+    if (d.imageId) setRemoveImg(true);
   }
 
   async function addExercises() {
@@ -96,7 +81,7 @@ export function RoutineEditPage({ params }: RouteProps) {
         <button class="btn primary small" type="button" onClick={save}>저장</button>
       </div>
       <div class="routine-head">
-        <button class="thumb-btn" type="button" aria-label="루틴 이미지 변경" onClick={changeThumb}>
+        <button class="thumb-btn" type="button" aria-label="루틴 그림 바꾸기" onClick={changeThumb}>
           <RoutineThumb r={d} size={72} url={thumbURL} />
           <span class="thumb-edit"><Icon name="edit" size={14} /></span>
         </button>
