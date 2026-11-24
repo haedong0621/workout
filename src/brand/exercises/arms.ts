@@ -17,7 +17,7 @@ export const HAMMER_CURL = art('dumbbell-hammer-curl', { body: curl(CURL_LO), ge
 
 // ── 덤벨 인클라인 컬: 45도 벤치에 기대 팔을 늘어뜨림 → 컬
 const incl = (arm: LimbSpec): BodySpec => ({ pelvis: [0, 0, 5.6], lean: -40, head: 15, arm, leg: { ankle: [4.6, 2.4, 1.0], pole: [1, 0.2, 1] } });
-const inclGear = (p: P): Shape[] => { const pel = pelvisOf(p); return [backPad(p, 1.6, 0.4), seatPad(p, 2.6), ...legs([pel[0] + 0.6, pel[0] - 2.6], pel[2] - 1.6), ...dbs([0, 1, 0])(p)]; };
+const inclGear = (p: P): Shape[] => { const pel = pelvisOf(p); return [...backPad(p, 1.6, 0.4), ...seatPad(p, 2.6), ...legs([pel[0] + 0.6, pel[0] - 2.6], pel[2] - 1.6), ...dbs([0, 1, 0])(p)]; };
 export const INCLINE_CURL = art('dumbbell-incline-curl',
   { body: incl({ hand: [-0.6, 2.4, 5.4], pole: [0.3, 0, 1] }), gear: inclGear, yaw: -30, center: [0, 0, 7.5] },
   { body: incl({ hand: [0.3, 2.4, 9.8], pole: [-1, 0, -0.3] }), gear: inclGear, yaw: -30, center: [0, 0, 7.5] });
@@ -36,9 +36,9 @@ const pr = (arm: LimbSpec): BodySpec => ({ pelvis: [0, 0, 6.0], lean: 14, head: 
 const preacherPad = (p: P): Shape => pad([p.shMid[0] + 0.7, 0, p.shMid[2] - 1.4], [p.shMid[0] + 3.0, 0, p.shMid[2] - 3.6], 3.0, 0.45);
 const prGear = (machine: boolean) => (p: P): Shape[] => {
   const pel = pelvisOf(p);
-  const base: Shape[] = [seatPad(p, 2.6), ...legs([pel[0] + 0.2], pel[2] - 1.7), preacherPad(p), capsule([p.shMid[0] + 2.4, 0, p.shMid[2] - 3.4], [p.shMid[0] + 2.4, 0, 0.3], 0.3, 'steel')];
+  const base: Shape[] = [...seatPad(p, 2.6), ...legs([pel[0] + 0.2], pel[2] - 1.7), preacherPad(p), capsule([p.shMid[0] + 2.4, 0, p.shMid[2] - 3.4], [p.shMid[0] + 2.4, 0, 0.3], 0.3, 'steel')];
   if (!machine) return [...base, ...barbell(mid(p), 1, 7.25, 1.45)];
-  return [...base, ...stack(pel[0] + 6.5, 0, 12), ...[p.hands.L, p.hands.R].flatMap((h) => [...lever([p.L.el[0] + 0.3, 3.4 * Math.sign(h[1]), p.L.el[2]], add(h, [0, 0.5 * Math.sign(h[1]), 0])), grip(h, [0, 1, 0], 0.45)])];
+  return [...base, ...stack(pel[0] + 6.5, 0, 12), ...[p.hands.L, p.hands.R].flatMap((h) => [...lever([p.L.el[0] + 0.3, 3.4 * Math.sign(h[1]), p.L.el[2]], add(h, [0, 0.5 * Math.sign(h[1]), 0])), ...grip(h, [0, 1, 0], 0.45)])];
 };
 const PR_LO: LimbSpec = { hand: [4.4, 2.3, -3.8], pole: [-0.2, 0.2, 1], rel: 'torso' };
 const PR_HI: LimbSpec = { hand: [2.0, 2.3, -0.6], pole: [0.5, 0.2, -1], rel: 'torso' };
@@ -67,7 +67,7 @@ export const CLOSE_GRIP_BENCH = art('barbell-close-grip-bench-press',
 
 // ── 덤벨 오버헤드 트라이셉스 익스텐션: 앉아서 덤벨 하나를 머리 뒤 → 위로
 const oh = (arm: LimbSpec): BodySpec => ({ pelvis: [0, 0, 5.7], lean: -4, head: 5, arm, leg: SIT });
-const ohGear = (p: P): Shape[] => { const pel = pelvisOf(p); return [backPad(p, 0.6, 0.4), seatPad(p, 3.0), ...legs([pel[0] + 0.4, pel[0] - 1], pel[2] - 1.7), ...dumbbell(add(mid(p), [0, 0, 0.6]), [0, 0, 1])]; };
+const ohGear = (p: P): Shape[] => { const pel = pelvisOf(p); return [...backPad(p, 0.6, 0.4), ...seatPad(p, 3.0), ...legs([pel[0] + 0.4, pel[0] - 1], pel[2] - 1.7), ...dumbbell(add(mid(p), [0, 0, 0.6]), [0, 0, 1])]; };
 export const DB_OVERHEAD_TRICEPS = art('dumbbell-overhead-triceps-extension',
   { body: oh({ hand: [-1.4, 0.35, 2.0], pole: [0.3, 0.3, 1], rel: 'torso' }), gear: ohGear, yaw: -40, center: [0, 0, 10] },
   { body: oh({ hand: [0.2, 0.35, 4.8], pole: [0.3, 0.3, 1], rel: 'torso' }), gear: ohGear, yaw: -40, center: [0, 0, 10] });
@@ -81,7 +81,7 @@ export const CABLE_OVERHEAD_TRICEPS = art('cable-overhead-triceps-extension',
 
 // ── 머신 트라이셉스 익스텐션: 앉아서 팔꿈치를 패드에 두고 손잡이를 아래로
 const mte = (arm: LimbSpec): BodySpec => ({ pelvis: [0, 0, 5.7], lean: 4, head: 5, arm, leg: SIT });
-const mteGear = (p: P): Shape[] => { const pel = pelvisOf(p); return [seatPad(p, 3.0), ...legs([pel[0] + 0.4], pel[2] - 1.7), box([p.L.el[0] + 0.6, 0, p.L.el[2] - 0.8], [0.7, 3.2, 0.35], 'pad'), capsule([p.L.el[0] + 0.6, 0, p.L.el[2] - 1.2], [p.L.el[0] + 0.6, 0, 0.3], 0.3, 'steel'), ...stack(pel[0] - 3.2, 0, 14), ...[p.hands.L, p.hands.R].flatMap((h) => [...lever([p.L.el[0], 3.6 * Math.sign(h[1]), p.L.el[2]], add(h, [0, 0.5 * Math.sign(h[1]), 0])), grip(h, [0, 1, 0], 0.45)])]; };
+const mteGear = (p: P): Shape[] => { const pel = pelvisOf(p); return [...seatPad(p, 3.0), ...legs([pel[0] + 0.4], pel[2] - 1.7), box([p.L.el[0] + 0.6, 0, p.L.el[2] - 0.8], [0.7, 3.2, 0.35], 'pad'), capsule([p.L.el[0] + 0.6, 0, p.L.el[2] - 1.2], [p.L.el[0] + 0.6, 0, 0.3], 0.3, 'steel'), ...stack(pel[0] - 3.2, 0, 14), ...[p.hands.L, p.hands.R].flatMap((h) => [...lever([p.L.el[0], 3.6 * Math.sign(h[1]), p.L.el[2]], add(h, [0, 0.5 * Math.sign(h[1]), 0])), ...grip(h, [0, 1, 0], 0.45)])]; };
 export const MACHINE_TRICEPS = art('machine-triceps-extension',
   { body: mte({ hand: [2.6, 2.4, 13.3], pole: [1, 0.3, -1] }), gear: mteGear, yaw: -40, center: [1, 0, 9] },
   { body: mte({ hand: [5.6, 2.4, 9.6], pole: [1, 0.3, -1] }), gear: mteGear, yaw: -40, center: [1, 0, 9] });

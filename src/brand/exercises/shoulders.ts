@@ -7,7 +7,7 @@ import { SIT, stand } from './poses.ts';
 
 const mid = (p: P): V => mul(add(p.hands.L, p.hands.R), 0.5);
 const dbs = (axis: V) => (p: P): Shape[] => [...dumbbell(p.hands.L, axis), ...dumbbell(p.hands.R, axis)];
-const upright = (p: P): Shape[] => { const pel = pelvisOf(p); return [backPad(p, 1.8, 0.4), seatPad(p, 3.0), ...legs([pel[0] + 0.4, pel[0] - 1.0], pel[2] - 1.7)]; };
+const upright = (p: P): Shape[] => { const pel = pelvisOf(p); return [...backPad(p, 1.8, 0.4), ...seatPad(p, 3.0), ...legs([pel[0] + 0.4, pel[0] - 1.0], pel[2] - 1.7)]; };
 const sit = (arm: LimbSpec, lean = -6): BodySpec => ({ pelvis: [0, 0, 5.7], lean, head: 5, arm, leg: SIT });
 const SEAT_CAM = { yaw: -75, center: [0, 0, 10] as V };
 
@@ -24,26 +24,26 @@ export const ARNOLD_PRESS = art('dumbbell-arnold-press',
   { body: sit(PRESS_HI), gear: (p) => [...upright(p), ...dbs([0, 1, 0])(p)], ...SEAT_CAM });
 
 // ── 머신 숄더 프레스
-const mpGear = (p: P): Shape[] => { const pel = pelvisOf(p); return [...upright(p), ...stack(pel[0] - 3.4, 0, 18), ...[p.hands.L, p.hands.R].flatMap((h) => [...lever([pel[0] - 2.6, 3.4 * Math.sign(h[1]), h[2] - 0.4], add(h, [0, 0.5 * Math.sign(h[1]), 0])), grip(h, [1, 0, 0], 0.5)])]; };
+const mpGear = (p: P): Shape[] => { const pel = pelvisOf(p); return [...upright(p), ...stack(pel[0] - 3.4, 0, 18), ...[p.hands.L, p.hands.R].flatMap((h) => [...lever([pel[0] - 2.6, 3.4 * Math.sign(h[1]), h[2] - 0.4], add(h, [0, 0.5 * Math.sign(h[1]), 0])), ...grip(h, [1, 0, 0], 0.5)])]; };
 export const MACHINE_SHOULDER_PRESS = art('machine-shoulder-press',
   { body: sit(PRESS_LO), gear: mpGear, ...SEAT_CAM },
   { body: sit(PRESS_HI), gear: mpGear, ...SEAT_CAM });
 
 // ── 케이블 숄더 프레스: 두 기둥 사이 의자, 아래 도르래
-const cpGear = (p: P): Shape[] => [...upright(p), ...crossover(-0.5, 6.5, 1.2), ...[p.hands.L, p.hands.R].flatMap((h) => [capsule(h, [-0.5, 6.3 * Math.sign(h[1]), 1.2], 0.1, 'plate'), grip(h, [1, 0, 0], 0.45)])];
+const cpGear = (p: P): Shape[] => [...upright(p), ...crossover(-0.5, 6.5, 1.2), ...[p.hands.L, p.hands.R].flatMap((h) => [capsule(h, [-0.5, 6.3 * Math.sign(h[1]), 1.2], 0.1, 'plate'), ...grip(h, [1, 0, 0], 0.45)])];
 export const CABLE_SHOULDER_PRESS = art('cable-shoulder-press',
   { body: sit(PRESS_LO), gear: cpGear, yaw: -95, center: [0, 0, 10], scale: 4.8, floor: [6, 8] },
   { body: sit(PRESS_HI), gear: cpGear, yaw: -95, center: [0, 0, 10], scale: 4.8, floor: [6, 8] });
 
 // ── 케이블 사이드 레터럴 레이즈: 기둥 옆에 서서 한 팔(오른팔)로
 const cLat = (hand: V, pole: V): BodySpec => stand({ arm: { L: { hand: [0.3, 3.4, 12.6], pole: [-1, 1, 0] }, R: { hand, pole } } });
-const cLatGear = (p: P): Shape[] => [...tower(0, 5.0, 1.0), ...cable(p.hands.R, [0.6, 5.0, 1.0]), grip(p.hands.R, [1, 0, 0], 0.45)];
+const cLatGear = (p: P): Shape[] => [...tower(0, 5.0, 1.0), ...cable(p.hands.R, [0.6, 5.0, 1.0]), ...grip(p.hands.R, [1, 0, 0], 0.45)];
 export const CABLE_LATERAL_RAISE = art('cable-lateral-raise',
   { body: cLat([0.6, 0.2, 8.8], [-1, -0.3, 0]), gear: cLatGear, yaw: -100, center: [0, 1.5, 10] },
   { body: cLat([0.6, -6.1, 14.2], [-0.2, 0, 1]), gear: cLatGear, yaw: -100, center: [0, 1.5, 10] });
 
 // ── 머신 사이드 레터럴 레이즈: 앉아서 팔꿈치 패드를 옆으로
-const mLatGear = (p: P): Shape[] => { const pel = pelvisOf(p); return [seatPad(p, 3.0), ...legs([pel[0] + 0.4], pel[2] - 1.7), box2([pel[0] - 1.6, 0, pel[2] + 3.4], [0.4, 1.4, 1.6]), ...[p.L, p.R].flatMap((s) => [capsule(s.el, s.sh, 0.62, 'pad'), grip(s.ha, [1, 0, 0], 0.4)])]; };
+const mLatGear = (p: P): Shape[] => { const pel = pelvisOf(p); return [...seatPad(p, 3.0), ...legs([pel[0] + 0.4], pel[2] - 1.7), box2([pel[0] - 1.6, 0, pel[2] + 3.4], [0.4, 1.4, 1.6]), ...[p.L, p.R].flatMap((s) => [capsule(s.el, s.sh, 0.62, 'pad'), ...grip(s.ha, [1, 0, 0], 0.4)])]; };
 import { box } from './gear.ts';
 const box2 = (c: V, h: V) => box(c, h, 'pad');
 const mlat = (abd: number): BodySpec => sit({ ua: [10, abd], fa: [60, abd * 0.6] }, 0);
@@ -65,7 +65,7 @@ export const CABLE_FRONT_RAISE = art('cable-front-raise',
   { body: cfront(90), gear: cfrGear, yaw: -30, center: [-1.5, 0, 9.5], floorX: -1.5, floor: [7, 4.5] });
 
 // ── 머신 리어 델트 플라이: 패드 쪽을 보고 앉아 팔을 앞 → 옆 뒤로
-const rdGear = (p: P): Shape[] => { const pel = pelvisOf(p); return [seatPad(p, 3.0), ...legs([pel[0] + 0.4], pel[2] - 1.7), box([pel[0] + 2.4, 0, pel[2] + 3.8], [0.4, 1.4, 2.0], 'pad'), ...stack(pel[0] + 4.8, 0, 16), ...[p.hands.L, p.hands.R].flatMap((h) => [capsule([pel[0] + 3.4, 1.4 * Math.sign(h[1]), h[2] + 3.6], add(h, [0, 0, 1.0]), 0.22, 'steel'), grip(h)])]; };
+const rdGear = (p: P): Shape[] => { const pel = pelvisOf(p); return [...seatPad(p, 3.0), ...legs([pel[0] + 0.4], pel[2] - 1.7), box([pel[0] + 2.4, 0, pel[2] + 3.8], [0.4, 1.4, 2.0], 'pad'), ...stack(pel[0] + 4.8, 0, 16), ...[p.hands.L, p.hands.R].flatMap((h) => [capsule([pel[0] + 3.4, 1.4 * Math.sign(h[1]), h[2] + 3.6], add(h, [0, 0, 1.0]), 0.22, 'steel'), ...grip(h)])]; };
 const rd = (arm: LimbSpec): BodySpec => ({ pelvis: [0, 0, 5.7], lean: 6, head: 0, arm, leg: SIT });
 export const MACHINE_REAR_DELT = art('machine-rear-delt-fly',
   { body: rd({ hand: [4.4, 1.0, 0.2], pole: [0, 1, 0], rel: 'torso' }), gear: rdGear, yaw: 60, center: [1, 0, 9] },
@@ -105,7 +105,7 @@ export const CABLE_UPRIGHT_ROW = art('cable-upright-row',
 
 // ── 케이블 익스터널 로테이션: 팔꿈치 옆구리에 붙이고 아래팔만 바깥으로 (오른팔)
 const er = (hand: V): BodySpec => stand({ arm: { L: { ua: [4, 4], fa: [4, 4] }, R: { hand, pole: [-0.2, -0.3, -1] } } });
-const erGear = (p: P): Shape[] => [...tower(1.6, 5.6, 10.6), ...cable(p.hands.R, [2.2, 5.6, 10.6]), grip(p.hands.R)];
+const erGear = (p: P): Shape[] => [...tower(1.6, 5.6, 10.6), ...cable(p.hands.R, [2.2, 5.6, 10.6]), ...grip(p.hands.R)];
 export const EXTERNAL_ROTATION = art('cable-external-rotation',
   { body: er([2.2, 0.2, 10.6]), gear: erGear, yaw: -95, center: [0.5, 1.5, 9.5] },
   { body: er([1.4, -4.2, 10.8]), gear: erGear, yaw: -95, center: [0.5, 1.5, 9.5] });

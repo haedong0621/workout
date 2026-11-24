@@ -33,7 +33,7 @@ export const TBAR_ROW = art('machine-tbar-row',
 
 // ── 케이블 시티드 로우: 앉아서 발판 밀고, 손잡이를 배 쪽으로
 const crow = (lean: number, arm: LimbSpec): BodySpec => ({ pelvis: [0, 0, 2.6], lean, head: lean > 0 ? 20 : 0, arm, leg: { ankle: [7.0, 1.3, 2.2], pole: [0, 0.3, 1], ft: 160 } });
-const crowGear = (p: P): Shape[] => { const h = mid(p); return [box([0.4, 0, 0.8], [3.0, 1.2, 0.8], 'pad'), box([8.0, 0, 2.2], [0.3, 1.8, 1.6]), ...cable(h, [9.6, 0, 2.6]), ...pulley([9.6, 0, 2.6], [0, 1, 0]), box([10.3, 0, 5], [0.6, 1.2, 5]), grip(h, [0, 1, 0], 0.7)]; };
+const crowGear = (p: P): Shape[] => { const h = mid(p); return [box([0.4, 0, 0.8], [3.0, 1.2, 0.8], 'pad'), box([8.0, 0, 2.2], [0.3, 1.8, 1.6]), ...cable(h, [9.6, 0, 2.6]), ...pulley([9.6, 0, 2.6], [0, 1, 0]), box([10.3, 0, 5], [0.6, 1.2, 5]), ...grip(h, [0, 1, 0], 0.7)]; };
 export const CABLE_SEATED_ROW = art('cable-seated-row',
   { body: crow(22, { hand: [7.0, 0.7, 6.2], pole: [-0.3, 1, 0] }), gear: crowGear, yaw: -30, center: [3, 0, 5], floor: [9, 4.5] },
   { body: crow(-8, { hand: [2.0, 0.7, 6.0], pole: [-1, 0.4, 0] }), gear: crowGear, yaw: -30, center: [3, 0, 5], floor: [9, 4.5] });
@@ -43,10 +43,10 @@ const sitM = (arm: LimbSpec, lean = -4): BodySpec => ({ pelvis: [0, 0, 5.7], lea
 function pullMachine(pivot: V, chestPad: boolean, kneePad = false) {
   return (p: P): Shape[] => {
     const pel = pelvisOf(p);
-    const out: Shape[] = [seatPad(p, 3.0), ...legs([pel[0] + 0.4], pel[2] - 1.7), ...stack(pel[0] - 3.4, 0, 16)];
+    const out: Shape[] = [...seatPad(p, 3.0), ...legs([pel[0] + 0.4], pel[2] - 1.7), ...stack(pel[0] - 3.4, 0, 16)];
     if (chestPad) out.push(box([pel[0] + 2.9, 0, pel[2] + 3.6], [0.35, 1.5, 1.8], 'pad'), capsule([pel[0] + 3.3, 0, pel[2] + 3.6], [pel[0] + 3.3, 0, 0.3], 0.25, 'steel'));
-    if (kneePad) out.push(roller([pel[0] + 2.4, 0, pel[2] + 1.5], 2.2));
-    for (const h of [p.hands.L, p.hands.R]) { const s = Math.sign(h[1]); out.push(...lever([pivot[0], pivot[1] * s, pivot[2]], h), grip(h, [0, 0, 1], 0.5)); }
+    if (kneePad) out.push(...roller([pel[0] + 2.4, 0, pel[2] + 1.5], 2.2));
+    for (const h of [p.hands.L, p.hands.R]) { const s = Math.sign(h[1]); out.push(...lever([pivot[0], pivot[1] * s, pivot[2]], h), ...grip(h, [0, 0, 1], 0.5)); }
     return out;
   };
 }
@@ -58,7 +58,7 @@ export const MACHINE_LAT_PULLDOWN = machine('machine-lat-pulldown', { hand: [0.6
 export const MACHINE_REVERSE_PULLDOWN = machine('machine-reverse-grip-lat-pulldown', { hand: [0.8, 2.6, 19.4], pole: [0.3, 0.5, 0] }, { hand: [1.5, 2.6, 14.0], pole: [-1, 0.2, -1] }, [-3.0, 2.8, 19.8], false, true, -4, -14);
 
 // ── 케이블 랫 풀다운 (넓은 바 / 좁은 V 손잡이)
-const latSeat = (p: P): Shape[] => { const pel = pelvisOf(p); return [seatPad(p, 3.0), ...legs([pel[0] + 0.4], pel[2] - 1.7), roller([pel[0] + 2.4, 0, pel[2] + 1.5], 2.2), capsule([pel[0] + 2.4, 0, pel[2] + 1.5], [pel[0] + 2.4, 0, 0.3], 0.22, 'steel'), capsule([-3.4, 0, 0.2], [-3.4, 0, 23], 0.36, 'steel'), capsule([-3.4, 0, 23], [0.6, 0, 23], 0.36, 'steel'), ...stack(-4.4, 0, 6)]; };
+const latSeat = (p: P): Shape[] => { const pel = pelvisOf(p); return [...seatPad(p, 3.0), ...legs([pel[0] + 0.4], pel[2] - 1.7), ...roller([pel[0] + 2.4, 0, pel[2] + 1.5], 2.2), capsule([pel[0] + 2.4, 0, pel[2] + 1.5], [pel[0] + 2.4, 0, 0.3], 0.22, 'steel'), capsule([-3.4, 0, 0.2], [-3.4, 0, 23], 0.36, 'steel'), capsule([-3.4, 0, 23], [0.6, 0, 23], 0.36, 'steel'), ...stack(-4.4, 0, 6)]; };
 const wideBar = (p: P): Shape[] => { const [x, , z] = p.hands.L; return [capsule([x, -4.2, z], [x, 4.2, z], 0.2, 'bar'), ...[-1, 1].map((s) => capsule([x, 4.2 * s, z], [x, 5.4 * s, z - 0.7], 0.2, 'bar')), ...[-1, 1].map((s) => cylA([x, 3.9 * s, z], [0, 1, 0], 0.25, 0.8, 'shoe')), ...cable([x, 0, z], [0.4, 0, 22.4]), ...pulley([0.4, 0, 22.8])]; };
 const vBar = (p: P): Shape[] => { const h = mid(p); return [cylA(h, [0, 1, 0], 0.22, 1.1, 'shoe'), capsule(add(h, [0, 0, 0.3]), add(h, [0, 0, 1.4]), 0.2, 'steel'), ...cable(add(h, [0, 0, 1.4]), [0.4, 0, 22.4]), ...pulley([0.4, 0, 22.8])]; };
 const lat = (hand: V, pole: V, lean: number): BodySpec => ({ pelvis: [0, 0, 5.7], lean, head: 15, arm: { hand, pole }, leg: SIT });
@@ -99,7 +99,7 @@ const HY = 10.4;
 const hyper = (lean: number): BodySpec => ({ pelvis: [0, 0, HY], lean, head: lean > 90 ? 20 : 10, arm: { hand: [0.9, -0.7, -1.0], pole: [0, 1, -1], rel: 'torso' }, leg: { th: [-45, 5], sh: [-45, 5], ft: 20 } });
 const hyperGear = (): Shape[] => [
   box([1.0, 0, HY - 1.0], [0.5, 1.4, 0.9], 'pad'),                           // 허벅지 패드
-  roller([-5.4, 0, HY - 5.6], 1.6),                                         // 발목 롤러
+  ...roller([-5.4, 0, HY - 5.6], 1.6),                                         // 발목 롤러
   box([-6.7, 0, HY - 6.5], [1.0, 1.6, 0.18], 'plate'),                      // 발판
   capsule([-6.8, 0, 0.4], [-6.6, 0, HY - 6.5], 0.3, 'steel'), capsule([-6.6, 0, HY - 6.5], [1.3, 0, HY - 1.6], 0.3, 'steel'), capsule([1.3, 0, 0.3], [1.3, 0, HY - 1.6], 0.3, 'steel'),
 ];

@@ -24,7 +24,7 @@ export const CABLE_CRUNCH = art('cable-crunch',
 
 // ── 머신 크런치: 앉아서 손잡이를 잡고 몸을 앞으로 말기
 const mc = (lean: number): BodySpec => ({ pelvis: [0, 0, 5.7], lean, head: lean > 10 ? -10 : 5, arm: { hand: [0.5, 2.3, 0.6], pole: [1, 1, -0.6], rel: 'torso' }, leg: SIT });
-const mcGear = (p: P): Shape[] => { const pel = pelvisOf(p); return [backPad(p, 1.4, 0.4), seatPad(p, 3.0), ...legs([pel[0] + 0.4], pel[2] - 1.7), ...stack(pel[0] - 3.4, 0, 15), ...[p.hands.L, p.hands.R].flatMap((h) => [...lever([pel[0] - 1.0, 3.0 * Math.sign(h[1]), pel[2] + 2.0], add(h, [0, 0.4 * Math.sign(h[1]), 0])), grip(h)])]; };
+const mcGear = (p: P): Shape[] => { const pel = pelvisOf(p); return [...backPad(p, 1.4, 0.4), ...seatPad(p, 3.0), ...legs([pel[0] + 0.4], pel[2] - 1.7), ...stack(pel[0] - 3.4, 0, 15), ...[p.hands.L, p.hands.R].flatMap((h) => [...lever([pel[0] - 1.0, 3.0 * Math.sign(h[1]), pel[2] + 2.0], add(h, [0, 0.4 * Math.sign(h[1]), 0])), ...grip(h)])]; };
 export const MACHINE_CRUNCH = art('machine-crunch',
   { body: mc(-8), gear: mcGear, yaw: -55, center: [0.5, 0, 8.5] },
   { body: mc(36), gear: mcGear, yaw: -55, center: [0.5, 0, 8.5] });

@@ -32,7 +32,7 @@ export const GOBLET_SQUAT = art('dumbbell-goblet-squat',
 const FEET: V = [3.6, 1.6, 2.2];
 const hack = (z: number, lean: number): BodySpec => ({ pelvis: [0, 0, z], lean, head: 10, arm: { hand: [-0.3, 2.6, 0.3], pole: [0, 1, -1], rel: 'torso' }, leg: { ankle: FEET, pole: [1, 0.3, 0.2], ft: 60 } });
 const hackGear = (pend: boolean) => (p: P): Shape[] => [
-  backPad(p, 1.4, 0.6),
+  ...backPad(p, 1.4, 0.6),
   ...[-1, 1].map((s) => capsule(add(p.shMid, [0, 1.6 * s, 0.9]), add(p.shMid, [1.0, 1.6 * s, 0.9]), 0.42, 'pad')),   // 어깨 패드
   obox([FEET[0] + 0.6, 0, 1.2], [1, 0, 0.35], [0, 1, 0], [1.6, 2.6, 0.2], 0.08, 'plate'),                           // 발판
   ...(pend ? [capsule([-4.5, 0, 16], add(p.shMid, [-1.2, 0, 0.5]), 0.3, 'steel'), cylA([-4.5, 0, 16], [0, 1, 0], 0.6, 1.2, 'plate'), capsule([-4.5, 0, 16], [-4.5, 0, 0.3], 0.4, 'steel')]
@@ -50,7 +50,7 @@ const lp = (ankle: V): BodySpec => ({ pelvis: [0, 0, 3.2], lean: -62, head: 35, 
 const lpGear = (p: P): Shape[] => {
   const a = p.L.an;
   const plate: V = [a[0] + 0.5, 0, a[2] + 0.4];
-  return [backPad(p, 1.4, 0.4), seatPad(p, 1.8), box([-1.6, 0, 1.0], [3.2, 1.6, 1.0]),
+  return [...backPad(p, 1.4, 0.4), ...seatPad(p, 1.8), box([-1.6, 0, 1.0], [3.2, 1.6, 1.0]),
     obox(plate, [-0.7, 0, 0.7], [0, 1, 0], [1.7, 2.8, 0.25], 0.08, 'plate'),
     capsule([3, 2.8, 0.6], [11, 2.8, 8.6], 0.3, 'steel'), capsule([3, -2.8, 0.6], [11, -2.8, 8.6], 0.3, 'steel'),
     ...plateOn(add(plate, [0.8, 3.4, -0.6]), [0, 1, 0], 1.6), ...plateOn(add(plate, [0.8, -3.4, -0.6]), [0, 1, 0], 1.6)];
@@ -63,7 +63,7 @@ export const LEG_PRESS = art('machine-leg-press',
 const extGear = (p: P): Shape[] => {
   const kn = p.L.kn;
   const pads = [p.L.an, p.R.an].map((an): Shape => cyl([an[0] + 0.55, an[1], an[2] - 0.1], 1, 0.5, 1.1, 'pad'));
-  return [backPad(p, 1.0, 0.4), seatPad(p, 3.6), ...legs([0.4, -1.4], 4.4), ...pads,
+  return [...backPad(p, 1.0, 0.4), ...seatPad(p, 3.6), ...legs([0.4, -1.4], 4.4), ...pads,
     ...[p.L.an, p.R.an].flatMap((an) => [capsule([kn[0], 2.6 * Math.sign(an[1]), kn[2]], [an[0] + 0.55, 2.6 * Math.sign(an[1]), an[2] - 0.1], 0.22, 'steel')]),
     cyl([kn[0], 2.65, kn[2]], 1, 0.45, 0.25, 'plate'), capsule([0.6, 2.3, 5.2], [0.6, 2.9, 5.2], 0.16, 'shoe'), ...stack(-3.4, 2.6, 10)];
 };
@@ -76,14 +76,14 @@ export const SINGLE_LEG_EXTENSION = art('machine-single-leg-extension', { body: 
 
 // ── 라잉 레그 컬: 엎드려 발목 롤러를 엉덩이 쪽으로
 const lyingCurl = (sh: number, ft: number): BodySpec => ({ pelvis: [0, 0, 5.4], lean: 92, head: 40, arm: { hand: [6.4, 2.2, 4.6], pole: [0, 1, 0.3] }, leg: { th: [-92, 4], sh: [sh, 3], ft } });
-const lcGear = (p: P): Shape[] => { const an = p.L.an; return [box([1.6, 0, 4.0], [5.6, 1.4, 0.4], 'pad'), ...legs([5.4, -2.4], 3.6), roller([an[0] - 0.4, 0, an[2] + 0.5], 1.6), capsule([-4.0, 2.6, 4.4], [an[0] - 0.4, 2.6, an[2] + 0.5], 0.22, 'steel'), cylA([-4.0, 2.7, 4.4], [0, 1, 0], 0.45, 0.25, 'plate')]; };
+const lcGear = (p: P): Shape[] => { const an = p.L.an; return [box([1.6, 0, 4.0], [5.6, 1.4, 0.4], 'pad'), ...legs([5.4, -2.4], 3.6), ...roller([an[0] - 0.4, 0, an[2] + 0.5], 1.6), capsule([-4.0, 2.6, 4.4], [an[0] - 0.4, 2.6, an[2] + 0.5], 0.22, 'steel'), cylA([-4.0, 2.7, 4.4], [0, 1, 0], 0.45, 0.25, 'plate')]; };
 export const LYING_LEG_CURL = art('machine-lying-leg-curl',
   { body: lyingCurl(-92, -60), gear: lcGear, yaw: -25, center: [0, 0, 5.5], floor: [8, 4.5] },
   { body: lyingCurl(170, 40), gear: lcGear, yaw: -25, center: [0, 0, 5.5], floor: [8, 4.5] });
 
 // ── 시티드 레그 컬: 앉아서 다리를 앞 → 아래로 접음
 const sc = (sh: number, ft: number): BodySpec => ({ pelvis: [0.2, 0, 5.7], lean: -14, arm: { hand: [0.6, 2.3, 5.4], pole: [-1, 0.4, 0] }, leg: { th: [84, 4], sh: [sh, 3], ft } });
-const scGear = (p: P): Shape[] => { const an = p.L.an, kn = p.L.kn; return [backPad(p, 1.0, 0.4), seatPad(p, 3.6), ...legs([0.4, -1.4], 4.4), roller([kn[0] - 0.4, 0, kn[2] + 0.9], 1.8), roller([an[0] + 0.1, 0, an[2] - 0.6], 1.8), capsule([kn[0], 2.6, kn[2]], [an[0], 2.6, an[2] - 0.6], 0.22, 'steel'), cylA([kn[0], 2.7, kn[2]], [0, 1, 0], 0.45, 0.25, 'plate'), ...stack(-3.4, 2.6, 10)]; };
+const scGear = (p: P): Shape[] => { const an = p.L.an, kn = p.L.kn; return [...backPad(p, 1.0, 0.4), ...seatPad(p, 3.6), ...legs([0.4, -1.4], 4.4), ...roller([kn[0] - 0.4, 0, kn[2] + 0.9], 1.8), ...roller([an[0] + 0.1, 0, an[2] - 0.6], 1.8), capsule([kn[0], 2.6, kn[2]], [an[0], 2.6, an[2] - 0.6], 0.22, 'steel'), cylA([kn[0], 2.7, kn[2]], [0, 1, 0], 0.45, 0.25, 'plate'), ...stack(-3.4, 2.6, 10)]; };
 export const SEATED_LEG_CURL = art('machine-seated-leg-curl', { body: sc(80, 140), gear: scGear, ...EXT }, { body: sc(-22, 50), gear: scGear, ...EXT });
 
 // ── 루마니안 / 스티프 데드리프트
@@ -121,7 +121,7 @@ export const MACHINE_HIP_THRUST = art('machine-hip-thrust', { body: ht(false), g
 
 // ── 힙 어브덕션 / 어덕션: 앉아서 무릎을 벌림 / 모음
 const hip = (abd: number): BodySpec => ({ pelvis: [0, 0, 5.7], lean: -14, head: 5, arm: { hand: [0.4, 2.6, 5.4], pole: [-1, 0.5, 0] }, leg: { th: [84, abd], sh: [-4, abd * 0.8], ft: 70 } });
-const hipGear = (outside: boolean) => (p: P): Shape[] => [backPad(p, 1.2, 0.4), seatPad(p, 3.2), ...legs([0.4, -1.4], 4.4), ...[p.L, p.R].flatMap((s) => { const sg = Math.sign(s.kn[1]); const c = add(s.kn, [-0.3, (outside ? 0.65 : -0.65) * sg, 0]); return [obox(c, [1, 0, 0], [0, 1, 0], [1.2, 0.25, 0.9], 0.2, 'pad'), capsule(c, [-1.2, c[1], 2.4], 0.2, 'steel')]; }), ...stack(-3.6, 0, 9)];
+const hipGear = (outside: boolean) => (p: P): Shape[] => [...backPad(p, 1.2, 0.4), ...seatPad(p, 3.2), ...legs([0.4, -1.4], 4.4), ...[p.L, p.R].flatMap((s) => { const sg = Math.sign(s.kn[1]); const c = add(s.kn, [-0.3, (outside ? 0.65 : -0.65) * sg, 0]); return [obox(c, [1, 0, 0], [0, 1, 0], [1.2, 0.25, 0.9], 0.2, 'pad'), capsule(c, [-1.2, c[1], 2.4], 0.2, 'steel')]; }), ...stack(-3.6, 0, 9)];
 export const HIP_ABDUCTION = art('machine-hip-abduction', { body: hip(6), gear: hipGear(true), yaw: -80, center: [1, 0, 6] }, { body: hip(36), gear: hipGear(true), yaw: -80, center: [1, 0, 6] });
 export const HIP_ADDUCTION = art('machine-hip-adduction', { body: hip(36), gear: hipGear(false), yaw: -80, center: [1, 0, 6] }, { body: hip(6), gear: hipGear(false), yaw: -80, center: [1, 0, 6] });
 
@@ -131,7 +131,7 @@ const calf = (up: boolean): BodySpec => { const b = grounded({ pelvis: [0, 0, 10
 const calfGear = (p: P): Shape[] => [box([0.9, 0, STEP / 2], [1.0, 2.6, STEP / 2], 'plate'), ...[-1, 1].map((s) => capsule(add(p.shMid, [-0.4, 1.4 * s, 0.7]), add(p.shMid, [1.4, 1.4 * s, 0.7]), 0.45, 'pad')), capsule(add(p.shMid, [-1.2, 0, 0.9]), [-3.2, 0, 0.3], 0.3, 'steel'), ...stack(-3.8, 0, 14)];
 export const CALF_RAISE = art('machine-calf-raise', { body: calf(false), gear: calfGear, yaw: -35, center: [0, 0, 9] }, { body: calf(true), gear: calfGear, yaw: -35, center: [0, 0, 9] });
 const scalf = (up: boolean): BodySpec => { const lift = up ? 0.9 : 0; return { pelvis: [0, 0, 5.7], lean: 6, head: 0, arm: { hand: [3.0, 2.0, 7.6 + lift], pole: [-1, 0.5, 0] }, leg: { th: [86, 6], sh: [-2, 5], ft: up ? 18 : 95 } }; };
-const scalfGear = (p: P): Shape[] => { const kn = p.L.kn; return [seatPad(p, 3.0), ...legs([0.4], 4.4), box([kn[0] - 0.2, 0, STEP / 2], [1.0, 2.6, STEP / 2], 'plate'), obox([kn[0] - 1.0, 0, kn[2] + 0.8], [1, 0, 0], [0, 1, 0], [1.2, 2.6, 0.35], 0.2, 'pad'), capsule([kn[0] - 1.0, 2.8, kn[2] + 0.8], [kn[0] - 4.0, 2.8, 1.2], 0.24, 'steel'), ...plateOn([kn[0] - 1.8, 3.4, kn[2] + 0.4], [0, 1, 0], 1.4)]; };
+const scalfGear = (p: P): Shape[] => { const kn = p.L.kn; return [...seatPad(p, 3.0), ...legs([0.4], 4.4), box([kn[0] - 0.2, 0, STEP / 2], [1.0, 2.6, STEP / 2], 'plate'), obox([kn[0] - 1.0, 0, kn[2] + 0.8], [1, 0, 0], [0, 1, 0], [1.2, 2.6, 0.35], 0.2, 'pad'), capsule([kn[0] - 1.0, 2.8, kn[2] + 0.8], [kn[0] - 4.0, 2.8, 1.2], 0.24, 'steel'), ...plateOn([kn[0] - 1.8, 3.4, kn[2] + 0.4], [0, 1, 0], 1.4)]; };
 const scalfBody = (up: boolean) => { const b = scalf(up); const g = grounded(b); return { ...b, pelvis: [0, 0, 5.7] as V, leg: { ...(b.leg as LegSpec) } } as BodySpec & { _g?: typeof g }; };
 export const SEATED_CALF_RAISE = art('machine-seated-calf-raise', { body: scalfBody(false), gear: scalfGear, yaw: -35, center: [1, 0, 6] }, { body: scalfBody(true), gear: scalfGear, yaw: -35, center: [1, 0, 6] });
 
