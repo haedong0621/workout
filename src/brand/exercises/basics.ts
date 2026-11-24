@@ -1,7 +1,6 @@
 // 기본 운동 그림: 바벨 숄더 프레스 · 덤벨 사이드 레터럴 레이즈 · 바벨 컬 · 덤벨 로우 · 푸시업
 import type { Shape, V } from './iso.ts';
-import { add, capsule, cyl, mul, rbox } from './iso.ts';
-import { art, barbell, cable, cableTower, dumbbell, flatBench, grounded, pad, post, pulley, seat, type BodySpec } from './kit.ts';
+import { art, barbell,   dumbbell, flatBench, grounded, pad,    type BodySpec } from './kit.ts';
 import { STAND, stand } from './poses.ts';
 
 // ── 바벨 숄더 프레스: 쇄골 앞 → 머리 위

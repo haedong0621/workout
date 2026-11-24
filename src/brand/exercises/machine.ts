@@ -82,17 +82,23 @@ export const rope = (a: V, b: V): Shape => capsule(a, b, 0.09, 'plate');
 /** 케이블 끝(도르래 앞) 위치 */
 export const pulleyOut = (x: number, y: number, z: number, face: V = [1, 0, 0]): V => { const f = norm([face[0], face[1], 0]); return [x + f[0] * 1.6, y + f[1] * 1.6, z]; };
 
-/** 스미스 머신: 바가 x 위치의 가이드 봉에 걸려 위아래로만 움직임 */
+/** 스미스 머신: 바가 x 위치의 가이드 봉 2개에 걸려 위아래로만 움직임. 뒤 기둥 2개 + 위 가로대 (앞은 트임) */
+export const SMITH_H = 18.6;
 export function smith(x: number, barZ: number): Shape[] {
-  const out: Shape[] = [
-    ...baseFrame(x - 2.2, x + 2.2, 6.1),
-    ...[-1, 1].flatMap((s) => [tube([x - 2.2, 6.1 * s, 0.3], [x - 2.2, 6.1 * s, 21]), tube([x + 2.2, 6.1 * s, 0.3], [x + 2.2, 6.1 * s, 21]), tube([x - 2.2, 6.1 * s, 21], [x + 2.2, 6.1 * s, 21])]),
-    tube([x - 2.2, -6.1, 21], [x - 2.2, 6.1, 21]), tube([x + 2.2, -6.1, 21], [x + 2.2, 6.1, 21]),
-    ...[-1, 1].flatMap((s) => [capsule([x, 4.95 * s, 0.5], [x, 4.95 * s, 20.8], 0.13, 'bar'), rbox([x, 4.95 * s, barZ], [0.36, 0.3, 0.55], 0.08, 'steel'), rbox([x - 0.3, 4.95 * s, barZ + 0.1], [0.12, 0.1, 0.5], 0.04, 'plate')]),
-    // 안전 고리 걸이(뒤 기둥)
-    ...[-1, 1].flatMap((s) => [4, 8, 12, 16].map((zz) => rbox([x - 2.2, 5.75 * s, zz], [0.12, 0.12, 0.08], 0.03, 'plate'))),
+  const H = SMITH_H, rx = x - 2.2, W = 5.7;
+  return [
+    tube([rx, -W, 0.26], [rx, W, 0.26]), ...[-1, 1].map((s) => tube([rx, W * s, 0.26], [x + 1.4, W * s, 0.26])),
+    ...[-1, 1].flatMap((s) => [
+      tube([rx, W * s, 0.3], [rx, W * s, H], 0.32),                                  // 뒤 기둥
+      tube([rx, W * s, H], [x + 0.4, W * s, H], 0.28),                                // 위 앞으로
+      capsule([x, 4.95 * s, 0.4], [x, 4.95 * s, H - 0.2], 0.15, 'bar'),              // 가이드 봉
+      tube([x, 4.95 * s, H], [x, W * s, H], 0.22), tube([x, 4.95 * s, 0.3], [x, W * s, 0.3], 0.22),
+      rbox([x, 4.95 * s, barZ], [0.38, 0.32, 0.55], 0.08, 'steel'),                   // 캐리지
+      rbox([x - 0.32, 4.95 * s, barZ + 0.1], [0.12, 0.1, 0.5], 0.04, 'plate'),         // 고리
+      ...[4, 8, 12].map((zz) => rbox([rx + 0.36, W * s, zz], [0.1, 0.14, 0.08], 0.03, 'plate')),
+    ]),
+    tube([rx, -W, H], [rx, W, H], 0.3),
   ];
-  return out;
 }
 
 /** 원판 꽂는 뿔(플레이트 로디드) + 원판 */

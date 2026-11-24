@@ -1,4 +1,6 @@
-// 기본 운동(카탈로그 id) → 운동 그림 id. 토글 옵션(바벨·스미스, 핀·플레이트 …)은 같은 그림을 같이 쓴다.
+// 기본 운동(카탈로그 id) → 운동 그림 id (토글 첫 옵션 = 바벨·핀).
+// 다른 옵션 그림은 아래 규칙으로 id 뒤에 붙음: 스미스 → -smith, 플레이트 → -plate, 이지바 → -ez. 맨몸(어시스트·중량)은 같은 그림.
+export const OPTION_SUFFIX: Record<string, string> = { 스미스: '-smith', 플레이트: '-plate', 이지바: '-ez' };
 export const CATALOG_ART: Record<string, string> = {
   // 가슴
   'seed-0': 'bench-press', 'seed-1': 'barbell-incline-bench-press', 'seed-54': 'barbell-decline-bench-press',

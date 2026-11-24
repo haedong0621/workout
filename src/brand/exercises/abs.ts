@@ -2,8 +2,7 @@
 import type { Shape, V } from './iso.ts';
 import { add, capsule, mul } from './iso.ts';
 import { art, cable, type BodySpec, type LimbSpec } from './kit.ts';
-import { backPad, box, grip, legs, lever, pelvisOf, pullupFrame, seatPad, stack, tower, type P } from './gear.ts';
-import { SIT } from './poses.ts';
+import {  box,     pullupFrame,   tower, type P } from './gear.ts';
 
 const mid = (p: P): V => mul(add(p.hands.L, p.hands.R), 0.5);
 const mat = (): Shape[] => [box([-1.5, 0, 0.12], [6.5, 2.6, 0.12], 'pad')];
@@ -23,11 +22,6 @@ export const CABLE_CRUNCH = art('cable-crunch',
   { body: kneel(78), gear: ccGear, yaw: -22, center: [2.5, 0, 8], floorX: 3, floor: [7.5, 4.5] });
 
 // ── 머신 크런치: 앉아서 손잡이를 잡고 몸을 앞으로 말기
-const mc = (lean: number): BodySpec => ({ pelvis: [0, 0, 5.7], lean, head: lean > 10 ? -10 : 5, arm: { hand: [0.5, 2.3, 0.6], pole: [1, 1, -0.6], rel: 'torso' }, leg: SIT });
-const mcGear = (p: P): Shape[] => { const pel = pelvisOf(p); return [...backPad(p, 1.4, 0.4), ...seatPad(p, 3.0), ...legs([pel[0] + 0.4], pel[2] - 1.7), ...stack(pel[0] - 3.4, 0, 15), ...[p.hands.L, p.hands.R].flatMap((h) => [...lever([pel[0] - 1.0, 3.0 * Math.sign(h[1]), pel[2] + 2.0], add(h, [0, 0.4 * Math.sign(h[1]), 0])), ...grip(h)])]; };
-export const MACHINE_CRUNCH = art('machine-crunch',
-  { body: mc(-8), gear: mcGear, yaw: -55, center: [0.5, 0, 8.5] },
-  { body: mc(36), gear: mcGear, yaw: -55, center: [0.5, 0, 8.5] });
 
 // ── 레그 레이즈: 누워서 편 다리를 바닥 → 수직으로
 const lr = (th: number): BodySpec => ({ pelvis: [0, 0, 1.15], lean: -90, head: 10, arm: { ua: 90, fa: 90 }, leg: { th: [th, 3], sh: [th, 3], ft: th + 80 } });
@@ -42,4 +36,4 @@ export const HANGING_LEG_RAISE = art('hanging-leg-raise',
   { body: hl(4), gear: () => pullupFrame(BAR_Z, 0.2, 6.2), yaw: -40, center: [0.5, 0, 13.5], scale: 4.5 },
   { body: hl(90), gear: () => pullupFrame(BAR_Z, 0.2, 6.2), yaw: -40, center: [0.5, 0, 13.5], scale: 4.5 });
 
-export const ARTS = [CRUNCH, CABLE_CRUNCH, MACHINE_CRUNCH, LEG_RAISE, HANGING_LEG_RAISE];
+export const ARTS = [CRUNCH, CABLE_CRUNCH, LEG_RAISE, HANGING_LEG_RAISE];

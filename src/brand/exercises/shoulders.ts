@@ -2,7 +2,7 @@
 import type { Shape, V } from './iso.ts';
 import { add, capsule, mul } from './iso.ts';
 import { art, barbell, cable, cylA, dumbbell, type BodySpec, type LimbSpec } from './kit.ts';
-import { backPad, crossover, grip, legs, lever, pelvisOf, seatPad, stack, tower, type P } from './gear.ts';
+import { backPad, crossover, grip, legs,  pelvisOf, seatPad,  tower, type P } from './gear.ts';
 import { SIT, stand } from './poses.ts';
 
 const mid = (p: P): V => mul(add(p.hands.L, p.hands.R), 0.5);
@@ -24,10 +24,6 @@ export const ARNOLD_PRESS = art('dumbbell-arnold-press',
   { body: sit(PRESS_HI), gear: (p) => [...upright(p), ...dbs([0, 1, 0])(p)], ...SEAT_CAM });
 
 // ── 머신 숄더 프레스
-const mpGear = (p: P): Shape[] => { const pel = pelvisOf(p); return [...upright(p), ...stack(pel[0] - 3.4, 0, 18), ...[p.hands.L, p.hands.R].flatMap((h) => [...lever([pel[0] - 2.6, 3.4 * Math.sign(h[1]), h[2] - 0.4], add(h, [0, 0.5 * Math.sign(h[1]), 0])), ...grip(h, [1, 0, 0], 0.5)])]; };
-export const MACHINE_SHOULDER_PRESS = art('machine-shoulder-press',
-  { body: sit(PRESS_LO), gear: mpGear, ...SEAT_CAM },
-  { body: sit(PRESS_HI), gear: mpGear, ...SEAT_CAM });
 
 // ── 케이블 숄더 프레스: 두 기둥 사이 의자, 아래 도르래
 const cpGear = (p: P): Shape[] => [...upright(p), ...crossover(-0.5, 6.5, 1.2), ...[p.hands.L, p.hands.R].flatMap((h) => [capsule(h, [-0.5, 6.3 * Math.sign(h[1]), 1.2], 0.1, 'plate'), ...grip(h, [1, 0, 0], 0.45)])];
@@ -43,13 +39,6 @@ export const CABLE_LATERAL_RAISE = art('cable-lateral-raise',
   { body: cLat([0.6, -6.1, 14.2], [-0.2, 0, 1]), gear: cLatGear, yaw: -100, center: [0, 1.5, 10] });
 
 // ── 머신 사이드 레터럴 레이즈: 앉아서 팔꿈치 패드를 옆으로
-const mLatGear = (p: P): Shape[] => { const pel = pelvisOf(p); return [...seatPad(p, 3.0), ...legs([pel[0] + 0.4], pel[2] - 1.7), box2([pel[0] - 1.6, 0, pel[2] + 3.4], [0.4, 1.4, 1.6]), ...[p.L, p.R].flatMap((s) => [capsule(s.el, s.sh, 0.62, 'pad'), ...grip(s.ha, [1, 0, 0], 0.4)])]; };
-import { box } from './gear.ts';
-const box2 = (c: V, h: V) => box(c, h, 'pad');
-const mlat = (abd: number): BodySpec => sit({ ua: [10, abd], fa: [60, abd * 0.6] }, 0);
-export const MACHINE_LATERAL_RAISE = art('machine-lateral-raise',
-  { body: mlat(8), gear: mLatGear, ...SEAT_CAM },
-  { body: mlat(82), gear: mLatGear, ...SEAT_CAM });
 
 // ── 덤벨 프론트 레이즈
 const front = (flex: number): BodySpec => stand({ arm: { ua: [flex, 6], fa: [flex + 4, 4] } });
@@ -65,11 +54,6 @@ export const CABLE_FRONT_RAISE = art('cable-front-raise',
   { body: cfront(90), gear: cfrGear, yaw: -30, center: [-1.5, 0, 9.5], floorX: -1.5, floor: [7, 4.5] });
 
 // ── 머신 리어 델트 플라이: 패드 쪽을 보고 앉아 팔을 앞 → 옆 뒤로
-const rdGear = (p: P): Shape[] => { const pel = pelvisOf(p); return [...seatPad(p, 3.0), ...legs([pel[0] + 0.4], pel[2] - 1.7), box([pel[0] + 2.4, 0, pel[2] + 3.8], [0.4, 1.4, 2.0], 'pad'), ...stack(pel[0] + 4.8, 0, 16), ...[p.hands.L, p.hands.R].flatMap((h) => [capsule([pel[0] + 3.4, 1.4 * Math.sign(h[1]), h[2] + 3.6], add(h, [0, 0, 1.0]), 0.22, 'steel'), ...grip(h)])]; };
-const rd = (arm: LimbSpec): BodySpec => ({ pelvis: [0, 0, 5.7], lean: 6, head: 0, arm, leg: SIT });
-export const MACHINE_REAR_DELT = art('machine-rear-delt-fly',
-  { body: rd({ hand: [4.4, 1.0, 0.2], pole: [0, 1, 0], rel: 'torso' }), gear: rdGear, yaw: 60, center: [1, 0, 9] },
-  { body: rd({ hand: [0.6, 5.8, 0.4], pole: [0, 0.2, 1], rel: 'torso' }), gear: rdGear, yaw: 60, center: [1, 0, 9] });
 
 // ── 덤벨 리어 델트 플라이: 숙여서 팔을 옆으로
 const bentOver = (arm: LimbSpec): BodySpec => stand({ lean: 70, head: 40, arm, leg: { th: [24, 8], sh: [-14, 6] } });
@@ -119,4 +103,4 @@ export const DB_SHRUG = art('dumbbell-shrug',
   { body: shrug(0, 2.3), gear: dbs([1, 0, 0]), yaw: -75 },
   { body: shrug(0.9, 2.3), gear: dbs([1, 0, 0]), yaw: -75 });
 
-export const ARTS = [DB_SHOULDER_PRESS, ARNOLD_PRESS, MACHINE_SHOULDER_PRESS, CABLE_SHOULDER_PRESS, CABLE_LATERAL_RAISE, MACHINE_LATERAL_RAISE, DB_FRONT_RAISE, CABLE_FRONT_RAISE, MACHINE_REAR_DELT, DB_REAR_DELT, CABLE_REAR_DELT, FACE_PULL, BARBELL_UPRIGHT_ROW, CABLE_UPRIGHT_ROW, EXTERNAL_ROTATION, BARBELL_SHRUG, DB_SHRUG];
+export const ARTS = [DB_SHOULDER_PRESS, ARNOLD_PRESS, CABLE_SHOULDER_PRESS, CABLE_LATERAL_RAISE, DB_FRONT_RAISE, CABLE_FRONT_RAISE, DB_REAR_DELT, CABLE_REAR_DELT, FACE_PULL, BARBELL_UPRIGHT_ROW, CABLE_UPRIGHT_ROW, EXTERNAL_ROTATION, BARBELL_SHRUG, DB_SHRUG];

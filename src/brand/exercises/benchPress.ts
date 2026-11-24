@@ -3,9 +3,11 @@
 import type { Grid } from '../pixelArt.ts';
 import { cyl, rbox, renderIso, type Shape, type V } from './iso.ts';
 import { floor, human, type Pose } from './rig.ts';
+import { smith } from './machine.ts';
 
 export const SIZE = 128;
 const CAM = { size: SIZE, scale: 5.6, center: [0.6, -0.6, 5.2] as V, az: -112 };
+const CAM_SMITH = { ...CAM, scale: 4.7, center: [0.2, -0.6, 8.8] as V };
 
 function bench(): Shape[] {
   return [
@@ -37,12 +39,19 @@ function pose(hand: V, elbowOut: V): Pose {
   return { head: [-4.55, 0, 5.85], neck: [-3.5, 0, 5.75], face: [0, 0, 1], L: { ...arm(1), ...leg(1) }, R: { ...arm(-1), ...leg(-1) } };
 }
 
-function frame(barZ: number, barX: number, elbow: V): Grid {
+function frame(barZ: number, barX: number, elbow: V, extra: Shape[] = []): Grid {
   const h = human(pose([barX, 2.45, barZ], elbow));
-  return renderIso([...bench(), ...h.shapes, ...barbell(barX, barZ)], CAM, h.marks);
+  return renderIso([...bench(), ...h.shapes, ...barbell(barX, barZ), ...extra], extra.length ? CAM_SMITH : CAM, h.marks);
 }
 
 export const benchFrameUp = () => frame(10.6, -2.3, [-2.4, 2.25, 8.3]);
 export const benchFrameDown = () => frame(7.5, -1.9, [-2.1, 3.3, 5.3]);
 
 export const BENCH_PRESS = { id: 'bench-press', frames: [benchFrameUp, benchFrameDown], size: SIZE } as const;
+
+// 스미스 머신 버전: 바가 같은 x에서 위아래로만 (가이드 봉)
+const SX = -2.1;
+export const BENCH_PRESS_SMITH = {
+  id: 'bench-press-smith', size: SIZE,
+  frames: [() => frame(10.6, SX, [-2.3, 2.25, 8.3], smith(SX, 10.6)), () => frame(7.5, SX, [-2.1, 3.3, 5.3], smith(SX, 7.5))],
+} as const;

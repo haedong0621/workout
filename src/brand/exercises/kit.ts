@@ -135,9 +135,16 @@ export const tiltX = (a: number): [V, V] => [[Math.cos(rad(a)), 0, Math.sin(rad(
 
 // ── 장비
 /** 바벨: 가운데 c, 좌우(y)로 놓임 */
+/** 바 모양: 일자(기본) / 이지바(가운데 W자). ezOf()가 그릴 때만 잠깐 바꿈 */
+export const BAR_STYLE = { ez: false };
 export function barbell(c: V, plates = 2, sleeve = 7.25, pr = 1.75): Shape[] {
   const [x, y, z] = c;
-  const out: Shape[] = [cyl([x, y, z], 1, 0.15, 7.9, 'bar')];
+  const out: Shape[] = [];
+  if (BAR_STYLE.ez) {
+    // 이지바: 가운데 손잡이가 W자로 꺾임(앞뒤 = x 방향)
+    const pts: V[] = [[0, -7.9, 0], [0, -3.6, 0], [0.42, -2.9, 0], [0, -2.2, 0], [0.32, -1.1, 0], [0, 0, 0], [0.32, 1.1, 0], [0, 2.2, 0], [0.42, 2.9, 0], [0, 3.6, 0], [0, 7.9, 0]];
+    for (let i = 1; i < pts.length; i++) out.push(capsule(add(c, pts[i - 1]!), add(c, pts[i]!), 0.15, 'bar'));
+  } else out.push(cyl([x, y, z], 1, 0.15, 7.9, 'bar'));
   for (const s of [-1, 1]) {
     const gap = 0.45;
     for (let k = 0; k < plates; k++) out.push(cyl([x, y + (6.0 + gap * k) * s, z], 1, pr, 0.18, 'plate'));
@@ -222,5 +229,5 @@ export function draw(sc: Scene): Grid {
   return renderIso([...fl, ...placed.shapes], { size: SIZE, scale: sc.scale ?? 5.6, center, az: -112 }, placed.marks);
 }
 
-export interface ExArt { id: string; frames: (() => Grid)[]; size: number }
-export const art = (id: string, a: Scene, b: Scene): ExArt => ({ id, frames: [() => draw(a), () => draw(b)], size: SIZE });
+export interface ExArt { id: string; frames: (() => Grid)[]; size: number; scenes?: [Scene, Scene] }
+export const art = (id: string, a: Scene, b: Scene): ExArt => ({ id, frames: [() => draw(a), () => draw(b)], size: SIZE, scenes: [a, b] });

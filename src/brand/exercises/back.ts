@@ -2,7 +2,7 @@
 import type { Shape, V } from './iso.ts';
 import { add, capsule, cyl, mul } from './iso.ts';
 import { art, barbell, cable, cylA, dumbbell, grounded, pulley, type BodySpec, type LimbSpec } from './kit.ts';
-import { backPad, box, grip, legs, lever, pelvisOf, plateOn, pullupFrame, roller, seatPad, stack, tower, type P } from './gear.ts';
+import { backPad, box, grip, legs,  pelvisOf,  pullupFrame, roller, seatPad, stack, tower, type P } from './gear.ts';
 import { lie } from './chest.ts';
 import { SIT, stand } from './poses.ts';
 
@@ -25,11 +25,6 @@ export const BARBELL_ROW = art('barbell-row',
   { body: bent(ROW_UP), gear: barAt, yaw: -30 });
 
 // ── 머신 티바 로우: 숙여서 T자 손잡이 당김
-const tbar = (arm: LimbSpec): BodySpec => grounded({ pelvis: [-0.8, 0, 8], lean: 55, head: 40, arm, leg: { th: [24, 10], sh: [-14, 8] } });
-const tbarGear = (p: P): Shape[] => { const h = mid(p); const pivot: V = [-7.5, 0, 0.8]; const end = add(h, [1.5, 0, -0.2]); return [capsule(pivot, end, 0.2, 'steel'), cylA(h, [0, 1, 0], 0.2, 1.3, 'shoe'), ...plateOn(end, [1, 0, 0.2], 1.6), box([-7.5, 0, 0.4], [0.8, 0.8, 0.4], 'plate')]; };
-export const TBAR_ROW = art('machine-tbar-row',
-  { body: tbar({ hand: [5.2, 0.9, 3.8], pole: [-1, 0.6, 0] }), gear: tbarGear, yaw: -30, center: [0, 0, 7] },
-  { body: tbar({ hand: [1.3, 0.9, -2.2], pole: [-1, 0.6, 1], rel: 'torso' }), gear: tbarGear, yaw: -30, center: [0, 0, 7] });
 
 // ── 케이블 시티드 로우: 앉아서 발판 밀고, 손잡이를 배 쪽으로
 const crow = (lean: number, arm: LimbSpec): BodySpec => ({ pelvis: [0, 0, 2.6], lean, head: lean > 0 ? 20 : 0, arm, leg: { ankle: [7.0, 1.3, 2.2], pole: [0, 0.3, 1], ft: 160 } });
@@ -39,24 +34,6 @@ export const CABLE_SEATED_ROW = art('cable-seated-row',
   { body: crow(-8, { hand: [2.0, 0.7, 6.0], pole: [-1, 0.4, 0] }), gear: crowGear, yaw: -30, center: [3, 0, 5], floor: [9, 4.5] });
 
 // ── 앉아서 당기는 머신(시티드 로우·하이 로우·랫 풀다운)
-const sitM = (arm: LimbSpec, lean = -4): BodySpec => ({ pelvis: [0, 0, 5.7], lean, head: 8, arm, leg: SIT });
-function pullMachine(pivot: V, chestPad: boolean, kneePad = false) {
-  return (p: P): Shape[] => {
-    const pel = pelvisOf(p);
-    const out: Shape[] = [...seatPad(p, 3.0), ...legs([pel[0] + 0.4], pel[2] - 1.7), ...stack(pel[0] - 3.4, 0, 16)];
-    if (chestPad) out.push(box([pel[0] + 2.9, 0, pel[2] + 3.6], [0.35, 1.5, 1.8], 'pad'), capsule([pel[0] + 3.3, 0, pel[2] + 3.6], [pel[0] + 3.3, 0, 0.3], 0.25, 'steel'));
-    if (kneePad) out.push(...roller([pel[0] + 2.4, 0, pel[2] + 1.5], 2.2));
-    for (const h of [p.hands.L, p.hands.R]) { const s = Math.sign(h[1]); out.push(...lever([pivot[0], pivot[1] * s, pivot[2]], h), ...grip(h, [0, 0, 1], 0.5)); }
-    return out;
-  };
-}
-const machine = (id: string, a: LimbSpec, b: LimbSpec, pivot: V, chest: boolean, knee = false, la = -4, lb = -4, yaw = -60) =>
-  art(id, { body: sitM(a, la), gear: pullMachine(pivot, chest, knee), yaw, center: [0.5, 0, 9.5], scale: 5.0 }, { body: sitM(b, lb), gear: pullMachine(pivot, chest, knee), yaw, center: [0.5, 0, 9.5], scale: 5.0 });
-export const MACHINE_SEATED_ROW = machine('machine-seated-row', { hand: [5.3, 2.0, 9.6], pole: [-0.3, 1, -0.4] }, { hand: [1.2, 2.4, 9.2], pole: [-1, 0.5, 0] }, [6.5, 2.2, 3.5], true);
-export const MACHINE_HIGH_ROW = machine('machine-high-row', { hand: [3.6, 2.8, 16.8], pole: [-0.2, 1, 0] }, { hand: [0.6, 2.9, 11.4], pole: [-1, 0.4, -0.5] }, [-2.8, 2.9, 19.5], false, true);
-export const MACHINE_LAT_PULLDOWN = machine('machine-lat-pulldown', { hand: [0.6, 4.6, 19.3], pole: [0, 1, 0] }, { hand: [1.2, 4.0, 14.4], pole: [-0.6, 0.7, -1] }, [-3.0, 4.2, 19.8], false, true, -4, -14);
-export const MACHINE_REVERSE_PULLDOWN = machine('machine-reverse-grip-lat-pulldown', { hand: [0.8, 2.6, 19.4], pole: [0.3, 0.5, 0] }, { hand: [1.5, 2.6, 14.0], pole: [-1, 0.2, -1] }, [-3.0, 2.8, 19.8], false, true, -4, -14);
-
 // ── 케이블 랫 풀다운 (넓은 바 / 좁은 V 손잡이)
 const latSeat = (p: P): Shape[] => { const pel = pelvisOf(p); return [...seatPad(p, 3.0), ...legs([pel[0] + 0.4], pel[2] - 1.7), ...roller([pel[0] + 2.4, 0, pel[2] + 1.5], 2.2), capsule([pel[0] + 2.4, 0, pel[2] + 1.5], [pel[0] + 2.4, 0, 0.3], 0.22, 'steel'), capsule([-3.4, 0, 0.2], [-3.4, 0, 23], 0.36, 'steel'), capsule([-3.4, 0, 23], [0.6, 0, 23], 0.36, 'steel'), ...stack(-4.4, 0, 6)]; };
 const wideBar = (p: P): Shape[] => { const [x, , z] = p.hands.L; return [capsule([x, -4.2, z], [x, 4.2, z], 0.2, 'bar'), ...[-1, 1].map((s) => capsule([x, 4.2 * s, z], [x, 5.4 * s, z - 0.7], 0.2, 'bar')), ...[-1, 1].map((s) => cylA([x, 3.9 * s, z], [0, 1, 0], 0.25, 0.8, 'shoe')), ...cable([x, 0, z], [0.4, 0, 22.4]), ...pulley([0.4, 0, 22.8])]; };
@@ -107,5 +84,5 @@ export const BACK_EXTENSION = art('back-extension',
   { body: hyper(140), gear: hyperGear, yaw: -28, center: [-0.5, 0, 8] },
   { body: hyper(46), gear: hyperGear, yaw: -28, center: [-0.5, 0, 8] });
 
-export const ARTS = [DEADLIFT, BARBELL_ROW, TBAR_ROW, CABLE_SEATED_ROW, MACHINE_SEATED_ROW, MACHINE_HIGH_ROW, CABLE_LAT_PULLDOWN, CABLE_CLOSE_PULLDOWN, MACHINE_LAT_PULLDOWN, MACHINE_REVERSE_PULLDOWN, PULLUP, CHINUP, STRAIGHT_ARM_PULLDOWN, PULLOVER, BACK_EXTENSION];
+export const ARTS = [DEADLIFT, BARBELL_ROW, CABLE_SEATED_ROW, CABLE_LAT_PULLDOWN, CABLE_CLOSE_PULLDOWN, PULLUP, CHINUP, STRAIGHT_ARM_PULLDOWN, PULLOVER, BACK_EXTENSION];
 void cyl; void backPad;

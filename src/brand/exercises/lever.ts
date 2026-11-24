@@ -3,7 +3,7 @@
 import type { Grid } from '../pixelArt.ts';
 import { add, cross, dot, len, mul, norm, sub, type Shape, type V } from './iso.ts';
 import { draw, pose, SIZE, type ExArt, type Scene } from './kit.ts';
-import { cushion, handle, horn, hub, tube } from './machine.ts';
+import { cushion, handle, horn, hub, roll, rope, tube } from './machine.ts';
 import type { P } from './gear.ts';
 
 /** 레버 부품(1장면 기준 좌표) */
@@ -12,18 +12,24 @@ export interface LeverParts {
   handles?: [V, V][];          // [가운데, 축]
   horns?: [V, V, number?][];   // [뿌리, 축, 원판 수]
   pads?: [V, V, V, [number, number]][]; // [가운데, 길이축, 폭축, 반 크기]
+  /** 케이블: [고정점(스택 도르래), 레버 위 점] */
+  cables?: [V, V][];
+  /** 롤러 패드: [가운데, 축, 반 길이] */
+  rolls?: [V, V, number][];
 }
 export interface LeverDef {
   /** 회전축이 있었으면 하는 자리(왼쪽 기준). 실제 축은 이 점을 수직 이등분선에 내린 곳 */
   prefer: V;
   /** 회전 방향 축: 'y' = 옆에서 본 앞뒤·위아래 흔들림(기본), 'z' = 위에서 본 좌우 벌림 */
-  axis?: 'y' | 'z';
+  axis?: 'x' | 'y' | 'z';
   /** 레버 끝이 따라가는 점(왼쪽): 기본 = 왼손 */
   at?: (p: P) => V;
   /** 레버 모양 (축 piv, 끝 t, 쪽 s) */
   build: (piv: V, t: V, s: 1 | -1) => LeverParts;
-  /** 양쪽에 하나씩(기본) / 가운데 하나 */
+  /** 양쪽에 하나씩(기본) / 한쪽만 */
   single?: boolean;
+  /** single일 때 쪽: 왼쪽 1(기본) / 오른쪽 -1 */
+  side?: 1 | -1;
   /** 움직이지 않는 받침(축 기둥 등) */
   base?: (piv: V, s: 1 | -1) => Shape[];
 }
@@ -57,18 +63,20 @@ function shapes(parts: LeverParts, f: (v: V) => V, g: (d: V) => V): Shape[] {
   for (const [c, a] of parts.handles ?? []) out.push(...handle(f(c), g(a), 0.6));
   for (const [c, a, n] of parts.horns ?? []) out.push(...horn(f(c), g(a), n ?? 1));
   for (const [c, u, v, h] of parts.pads ?? []) out.push(...cushion(f(c), g(u), g(v), h));
+  for (const [a, b] of parts.cables ?? []) out.push(rope(a, f(b)));
+  for (const [c, a, h] of parts.rolls ?? []) out.push(...roll(f(c), h, g(a)));
   return out;
 }
 
 /** 레버 머신 그림 2장: 정적 장비 stat + 레버 */
 export function leverArt(id: string, a: Scene, b: Scene, def: LeverDef): ExArt {
-  const axis: V = def.axis === 'z' ? [0, 0, 1] : [0, 1, 0];
+  const axis: V = def.axis === 'z' ? [0, 0, 1] : def.axis === 'x' ? [1, 0, 0] : [0, 1, 0];
   const at = def.at ?? ((p: P) => p.hands.L);
   const pa = pose(a.body), pb = pose(b.body);
   const ta = at(pa), tb = at(pb);
   const piv = pivotFor(ta, tb, def.prefer, axis);
   const ang = signedAngle(sub(ta, piv), sub(tb, piv), axis);
-  const sides: (1 | -1)[] = def.single ? [1] : [1, -1];
+  const sides: (1 | -1)[] = def.single ? [def.side ?? 1] : [1, -1];
   const mir = (v: V, s: number): V => [v[0], v[1] * s, v[2]];
   const lever = (k: 0 | 1) => (): Shape[] => {
     const out: Shape[] = [];
@@ -76,7 +84,7 @@ export function leverArt(id: string, a: Scene, b: Scene, def: LeverDef): ExArt {
       const P = mir(piv, s), T = mir(ta, s);
       const parts = def.build(P, T, s);
       // 오른쪽은 거울: y축 회전은 같은 각, z축 회전은 반대 각
-      const an = k === 0 ? 0 : def.axis === 'z' ? ang * s : ang;
+      const an = k === 0 ? 0 : def.axis === 'z' || def.axis === 'x' ? ang * s : ang;
       out.push(...(def.base?.(P, s) ?? []), ...hub(P, axis, 0.5), ...shapes(parts, (v) => rotAround(v, P, axis, an), (d) => rotDir(d, axis, an)));
     }
     return out;
