@@ -1,110 +1,25 @@
-// 루틴 그림: 2D 도트 근육 지도 (81×128칸, 배경 투명)
-// 남색 몸, 근육 사이는 흰 선, 머리·손·발은 흰색 + 회색 테두리. 운동하는 부위만 색칠.
-// 근육은 왼쪽 반(가운데 x = 40)의 조절점을 부드러운 곡선(캣멀롬)으로 이어 만들고 거울로 복사한다.
-// 근육 사이 얇은 틈은 흰 선으로 메운다.
+// 루틴 그림: 픽셀 근육 지도 (81×128칸, 배경 투명) — "퍼즐" 방식
+// 1) 사람 몸 실루엣(머리·몸통+다리·팔·손·발)을 흰 바탕 + 회색 테두리로 깔고
+// 2) 그 안을 근육 조각으로 빈틈없이 나눈 뒤(어느 조각에도 안 들어간 칸은 가장 가까운 조각으로)
+// 3) 조각 사이, 테두리와 조각 사이를 어디서나 1칸씩 비운다. 운동하는 부위 조각만 색칠.
+// 모든 모양은 왼쪽 반(칸 좌표, 가운데 = 40)으로 정의하고 거울로 복사.
 import { blank, type Grid } from '../pixelArt.ts';
 
 export const PICTO_W = 81;
 export const PICTO_H = 128;
-const MID = 40;
-
-export const PICTO_PALETTE: Record<string, string> = {
-  m: '#56708c',   // 근육(남색)
-  w: '#ffffff',   // 근육 사이 선
-  h: '#ffffff',   // 머리·손·발
-  o: '#aebbc8',   // 머리·손·발 테두리
-  c: '#f2595d',   // 강조: 가슴
-  k: '#4f86ee',   // 강조: 등
-  s: '#22c7b2',   // 강조: 어깨
-  a: '#a77bfa',   // 강조: 팔
-  l: '#f7b733',   // 강조: 하체
-  b: '#fb8f45',   // 강조: 복근
-};
+const CX = 40;
 
 export type Group = 'chest' | 'back' | 'shoulders' | 'biceps' | 'triceps' | 'forearms' | 'abs' | 'legs';
+
+export const PICTO_PALETTE: Record<string, string> = {
+  o: '#aebbc8',   // 몸 테두리
+  h: '#ffffff',   // 몸 바탕·간격·머리·손·발
+  m: '#56708c',   // 근육
+  c: '#f2595d', k: '#4f86ee', s: '#22c7b2', a: '#a77bfa', l: '#f7b733', b: '#fb8f45',
+};
 const GROUP_COLOR: Record<Group, string> = { chest: 'c', back: 'k', shoulders: 's', biceps: 'a', triceps: 'a', forearms: 'a', abs: 'b', legs: 'l' };
 
 type Pt = [number, number];
-interface Part { id: string; group: Group | null; skin?: boolean; pts: Pt[]; sharp?: boolean }
-
-/** 닫힌 캣멀롬 곡선으로 조절점을 촘촘한 다각형으로 */
-function smooth(pts: Pt[], n = 8): Pt[] {
-  const out: Pt[] = [];
-  const N = pts.length;
-  for (let i = 0; i < N; i++) {
-    const p0 = pts[(i - 1 + N) % N]!, p1 = pts[i]!, p2 = pts[(i + 1) % N]!, p3 = pts[(i + 2) % N]!;
-    for (let k = 0; k < n; k++) {
-      const t = k / n, t2 = t * t, t3 = t2 * t;
-      const f = (a: number, b: number, c: number, d: number) => 0.5 * (2 * b + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (-a + 3 * b - 3 * c + d) * t3);
-      out.push([f(p0[0], p1[0], p2[0], p3[0]), f(p0[1], p1[1], p2[1], p3[1])]);
-    }
-  }
-  return out;
-}
-
-// ── 공통 부분 ─────────────────────────────────────────────
-const HEAD: Part = { id: 'head', group: null, skin: true, pts: [[40, 0.6], [44.6, 1.8], [47.4, 6], [47.8, 11.5], [46.6, 16.4], [43.6, 20], [40, 21.4], [36.4, 20], [33.4, 16.4], [32.2, 11.5], [32.6, 6], [35.4, 1.8]] };
-const NECK: Part = { id: 'neck', group: null, pts: [[35.4, 19], [40.6, 20.6], [40.6, 28.6], [33.6, 28.2], [34.4, 23]] };
-const HAND: Part = {
-  id: 'hand', group: null, skin: true,
-  pts: [[14.2, 74.2], [20.2, 74], [21.8, 77.4], [22.4, 81.6], [21, 82.4], [20.2, 79.8], [20.4, 85], [18.6, 88.4], [15.4, 88.2], [13.4, 84.6], [12.8, 79.2]],
-};
-const FOOT: Part = { id: 'foot', group: null, skin: true, pts: [[31.4, 119.6], [35.6, 119.4], [36.6, 123.2], [37.4, 127], [28.2, 127.2], [29.4, 123.4]] };
-const KNEE: Part = { id: 'knee', group: 'legs', pts: [[30.4, 98.6], [35.6, 98.2], [37, 101.4], [35.8, 104.6], [31, 104.6], [29.4, 101.6]] };
-
-const FRONT: Part[] = [
-  HEAD, NECK, HAND, FOOT, KNEE,
-  { id: 'trap', group: 'back', pts: [[26.8, 28.4], [33.4, 23.6], [34.2, 28.6]] },
-  { id: 'delt', group: 'shoulders', pts: [[18.4, 35.6], [20.2, 30.8], [24.6, 28], [30.4, 27.8], [30.2, 30.6], [27.4, 34.4], [25, 40.2], [21.4, 43.6], [18.6, 41.8]] },
-  { id: 'pec', group: 'chest', pts: [[30.6, 28.6], [36, 28.8], [40.6, 29], [40.6, 43.4], [36, 45.2], [31.2, 44.2], [28, 41.8], [26.8, 38], [27.8, 33.4]] },
-  { id: 'serratus', group: 'abs', pts: [[26.6, 41.4], [29.2, 43.6], [29.6, 49.6], [27.6, 51.8], [26.4, 47]] },
-  { id: 'oblique', group: 'abs', pts: [[29.4, 44.4], [34.6, 45.6], [34.6, 66.4], [31.2, 68.8], [29, 62], [28, 55], [27.8, 50.6], [29.6, 49.6]] },
-  { id: 'abs', group: 'abs', pts: [[34.6, 45.4], [40.6, 44.2], [40.6, 67.6], [34.6, 67.6]], sharp: true },
-  { id: 'biceps', group: 'biceps', pts: [[21.8, 43.8], [25.2, 41], [26.6, 46], [26, 52.6], [24.2, 56.8], [20.2, 57], [19, 51.6], [19.6, 46.4]] },
-  { id: 'triceps', group: 'triceps', pts: [[18.4, 42.4], [21.6, 44.2], [19.6, 47], [18.8, 52], [20, 57], [17.2, 56.2], [16.6, 50], [17.2, 45]] },
-  { id: 'brachio', group: 'forearms', pts: [[16.8, 57.4], [20.4, 57.6], [19.6, 62], [17.6, 68], [15.4, 73.6], [14, 70], [14.6, 63]] },
-  { id: 'flexor', group: 'forearms', pts: [[20.6, 57.4], [24.4, 57.2], [25.2, 60.6], [23.6, 66.6], [20.6, 73.6], [15.8, 73.6], [18, 67.6], [20, 62]] },
-  { id: 'hip', group: null, pts: [[30.8, 66.8], [34.6, 68], [40.6, 68], [40.6, 75], [37.4, 77], [33, 73.6], [30.6, 70.6]] },
-  { id: 'vLat', group: 'legs', pts: [[29.6, 69.4], [32.6, 73], [33.6, 82], [33.4, 92], [32, 98.4], [29.4, 98.2], [27.4, 90], [27.4, 80]] },
-  { id: 'rectus', group: 'legs', pts: [[32.8, 73.2], [36.6, 76.6], [37.4, 84], [36.4, 92.4], [35.2, 98], [32.4, 98.2], [33.8, 91], [34, 82]] },
-  { id: 'adductor', group: 'legs', pts: [[36.8, 76.8], [39.6, 77.2], [39.4, 84], [38, 89.6], [37.4, 84]] },
-  { id: 'vmo', group: 'legs', pts: [[37.8, 90], [39.4, 89.4], [38.6, 95.4], [36.4, 98.4], [35.6, 98], [36.6, 93.4]] },
-  { id: 'tibialis', group: 'legs', pts: [[29.8, 104.8], [33.4, 104.8], [33.2, 111], [32.4, 119.4], [30.6, 119.4], [29.2, 112]] },
-  { id: 'calfIn', group: 'legs', pts: [[33.6, 104.8], [36.4, 104.8], [37.6, 108.6], [37, 113], [35.4, 119.4], [32.8, 119.4], [33.4, 111]] },
-];
-
-const BACK: Part[] = [
-  HEAD, NECK, HAND, FOOT, KNEE,
-  { id: 'trap', group: 'back', pts: [[26.8, 28.4], [33.4, 23], [40.6, 22], [40.6, 56], [36.4, 46], [33, 38], [30.4, 33], [28.2, 31]] },
-  { id: 'delt', group: 'shoulders', pts: [[18.4, 35.6], [20.2, 30.8], [24.6, 28], [28.2, 29.4], [29.6, 32.4], [27.2, 36.8], [25, 40.2], [21.4, 43.6], [18.6, 41.8]] },
-  { id: 'infra', group: 'back', pts: [[29.8, 33.4], [32.8, 38.4], [35.2, 44], [32, 45.2], [28.4, 42.6], [27.6, 38]] },
-  { id: 'teres', group: 'back', pts: [[25.4, 40.6], [27.6, 38.6], [28.4, 42.8], [27.2, 45.2], [25.2, 44]] },
-  { id: 'lat', group: 'back', pts: [[25.4, 44.6], [28.6, 43.4], [32.2, 45.6], [35.6, 45], [37, 49], [40.6, 57.6], [40.6, 60.4], [36, 61.8], [32.4, 64.6], [29.4, 62], [27.6, 55], [26, 49]] },
-  { id: 'erector', group: 'back', pts: [[36.2, 62], [40.6, 60.8], [40.6, 68.6], [35, 68.6], [33, 66]] },
-  { id: 'triLong', group: 'triceps', pts: [[21.8, 43.8], [25.2, 41], [26.6, 46], [26, 52.6], [24.2, 56.8], [21.2, 57], [21, 51], [21.4, 46.4]] },
-  { id: 'triLat', group: 'triceps', pts: [[18.4, 42.4], [21.6, 44.2], [21, 48], [20.8, 53], [21, 57], [17.2, 56.2], [16.6, 50], [17.2, 45]] },
-  { id: 'brachio', group: 'forearms', pts: [[16.8, 57.4], [20.4, 57.6], [19.6, 62], [17.6, 68], [15.4, 73.6], [14, 70], [14.6, 63]] },
-  { id: 'flexor', group: 'forearms', pts: [[20.6, 57.4], [24.4, 57.2], [25.2, 60.6], [23.6, 66.6], [20.6, 73.6], [15.8, 73.6], [18, 67.6], [20, 62]] },
-  { id: 'gMed', group: 'legs', pts: [[30.4, 66.2], [34.6, 68.8], [33.6, 72.6], [30, 73], [28.8, 69.6]] },
-  { id: 'gMax', group: 'legs', pts: [[34.8, 69], [40.6, 69], [40.6, 82.4], [36.4, 84.4], [31.6, 83.2], [29.2, 79], [29.6, 74.2], [33.6, 73]] },
-  { id: 'hamOut', group: 'legs', pts: [[28.2, 80.8], [31.6, 83.6], [33.6, 85], [33.6, 92], [32.4, 98.2], [29.4, 98.2], [27.4, 90]] },
-  { id: 'hamIn', group: 'legs', pts: [[33.8, 85], [36.6, 84.6], [39.6, 83.2], [39.2, 89.6], [37, 95.4], [35.4, 98.2], [32.8, 98.2], [34, 92]] },
-  { id: 'calfOut', group: 'legs', pts: [[29.6, 104.8], [33.2, 104.8], [33.4, 109.6], [32.8, 114.4], [31.6, 117], [29.2, 112], [28.8, 108]] },
-  { id: 'calfIn', group: 'legs', pts: [[33.4, 104.8], [36.4, 104.8], [37.8, 108.6], [37.2, 113], [35.4, 117], [33, 114.4], [33.6, 109.6]] },
-  { id: 'achilles', group: 'legs', pts: [[30.6, 116.8], [35.4, 116.8], [34.8, 119.4], [31.4, 119.4]], sharp: true },
-];
-
-/** 근육 안쪽 흰 선 */
-interface Inner { mid: [number, number]; across: [x0: number, x1: number, y: number][]; diag: Pt[][] }
-const INNER: Record<'front' | 'back', Inner> = {
-  front: {
-    mid: [29, 67],
-    across: [[35, 40, 51], [35, 40, 57], [35, 40, 62.5]],
-    diag: [[[26.8, 46], [29, 45.2]], [[27.2, 49], [29.4, 48.4]]],        // 전거근 톱니
-  },
-  back: { mid: [22, 84], across: [], diag: [] },
-};
-
 const inPoly = (x: number, y: number, p: Pt[]) => {
   let inside = false;
   for (let i = 0, j = p.length - 1; i < p.length; j = i++) {
@@ -114,55 +29,100 @@ const inPoly = (x: number, y: number, p: Pt[]) => {
   return inside;
 };
 
+// ── 실루엣 ─────────────────────────────────────────
+const inHead = (x: number, y: number) => ((x - 40) / 6.6) ** 2 + ((y - 9.2) / 8.2) ** 2 <= 1;
+const BODY: Pt[] = [
+  [36, 15], [36, 21], [31, 22.4], [26, 24.2], [22.4, 26.4], [20.6, 29.4], [21.2, 34], [24.2, 38], [26.4, 41.2],
+  [27.4, 49], [28.7, 58], [28, 66], [25.6, 74], [25, 84], [26, 96], [26.8, 101], [26, 106], [26, 113], [27.6, 121.4],
+  [36.2, 121.4], [36.6, 113], [37.6, 106], [38, 101], [38.6, 93], [39.2, 84], [39.8, 78], [40.6, 76.6], [40.6, 15],
+];
+const ARM: Pt[] = [[21.4, 27.2], [17.2, 31.2], [15.8, 39], [15.4, 47], [14.4, 55], [14, 62], [21.6, 62], [22.6, 56], [24, 48.4], [24.9, 41], [24.6, 35], [23.4, 30]];
+const HAND: Pt[] = [[13.6, 61.6], [21.8, 61.6], [23, 65.6], [22.4, 69.8], [20, 73.2], [15.8, 72.8], [13, 68.4]];
+const FOOT: Pt[] = [[27.4, 120.8], [36.2, 120.8], [37.2, 124.4], [38, 127.4], [25.6, 127.4], [26.2, 124.4]];
+
+// ── 근육 조각 ──────────────────────────────────────
+interface Piece { group: Group | null; poly: Pt[]; bands?: number[] }
+const P = (group: Group | null, poly: Pt[], bands?: number[]): Piece => ({ group, poly, bands });
+
+const NECK = P(null, [[35, 14], [40.6, 14], [40.6, 23.4], [35, 23.4]]);
+const DELT = P('shoulders', [[17, 30.4], [21, 26.6], [25.4, 25], [30.4, 24.4], [28.8, 28.4], [25.8, 33], [23, 38], [17.4, 37]]);
+const FOREARM = P('forearms', [[14.8, 48.6], [24.4, 48.6], [22.8, 56], [21.8, 62], [13.8, 62], [14.2, 55]]);
+const KNEE = P('legs', [[26, 97], [38.4, 97], [38.2, 103], [26, 103]]);
+const SHIN_OUT = P('legs', [[25.8, 103], [32, 103], [32, 121.4], [27.4, 121.4], [26, 113]]);
+const SHIN_IN = P('legs', [[32, 103], [38.2, 103], [37, 113], [36.4, 121.4], [32, 121.4]]);
+
+const FRONT: Piece[] = [
+  NECK, DELT, FOREARM, KNEE, SHIN_OUT, SHIN_IN,
+  P('back', [[30.6, 22.6], [35.4, 21], [35.4, 24.6], [30.4, 24.8]]),                                                   // 승모(앞)
+  P('chest', [[29, 24.8], [40.6, 24.8], [40.6, 41.2], [35, 42.6], [30, 41.6], [27, 38.4], [26.2, 34], [27, 29]]),        // 가슴
+  P('abs', [[35, 42.4], [40.6, 41.4], [40.6, 66], [35, 66]], [48.5, 54.5, 60.5]),                                      // 복근(4칸)
+  P('abs', [[26.4, 40.2], [35, 42.6], [35, 66.2], [30, 68], [28.6, 58], [27.4, 49]]),                                  // 옆구리
+  P(null, [[28, 66.2], [35, 66.2], [40.6, 66.2], [40.6, 76.6], [35.4, 72.4], [30, 70.4]]),                             // 아랫배
+  P('biceps', [[18.6, 37.2], [25, 38.4], [24.6, 44], [23.8, 48.4], [18.4, 48.4], [17.4, 42]]),
+  P('triceps', [[15.4, 35.6], [18.6, 37.2], [17.4, 42], [18.4, 48.4], [15, 48], [15.2, 41]]),
+  P('legs', [[25.4, 74], [31.2, 72], [33, 84], [32.6, 97], [26, 97], [24.8, 84]]),                                     // 허벅지 바깥
+  P('legs', [[31.2, 72], [40.6, 76.8], [39.4, 84], [38.6, 93], [38.4, 97], [32.6, 97], [33, 84]]),                     // 허벅지 안쪽
+];
+const BACK: Piece[] = [
+  NECK, DELT, FOREARM, KNEE, SHIN_OUT, SHIN_IN,
+  P('back', [[30.6, 22.6], [35.4, 21], [40.6, 20.4], [40.6, 48], [36.4, 40.2], [32.4, 32], [29.2, 26.4]]),             // 승모
+  P('back', [[29.4, 30], [32.6, 34.4], [35.6, 40.2], [32, 43.2], [28, 40], [27, 35]]),                                 // 견갑골
+  P('back', [[25.6, 38.2], [28, 40.2], [32, 43.4], [35.6, 40.6], [40.6, 48.4], [40.6, 58.2], [35, 61.2], [30, 64], [28.6, 56], [27.2, 46]]), // 광배
+  P('back', [[35, 61.4], [40.6, 58.4], [40.6, 67], [29, 67], [30, 64.2]]),                                             // 허리
+  P('triceps', [[15.4, 35.6], [25, 38.4], [24.6, 44], [23.8, 48.4], [15, 48], [15.2, 41]]),
+  P('legs', [[28, 67.2], [40.6, 67.2], [40.6, 80.4], [34, 82], [28.4, 79.4], [27, 73]]),                               // 엉덩이
+  P('legs', [[25.2, 78.4], [32.6, 82], [32.6, 97], [26, 97], [24.8, 86]]),                                             // 햄스트링 바깥
+  P('legs', [[32.6, 82], [40.6, 80.6], [39.4, 86], [38.6, 95], [38.4, 97], [32.6, 97]]),                               // 햄스트링 안쪽
+];
+
 export interface PictoSpec { view: 'front' | 'back'; hl: Group[] }
 
-const cache = new Map<string, Pt[]>();
-const shapeOf = (view: string, p: Part) => {
-  const key = view + p.id;
-  if (!cache.has(key)) cache.set(key, p.sharp ? p.pts : smooth(p.pts));
-  return cache.get(key)!;
-};
+const N4 = [[1, 0], [-1, 0], [0, 1], [0, -1]] as const;
 
 export function drawPicto(spec: PictoSpec): Grid {
-  const parts = spec.view === 'front' ? FRONT : BACK;
-  const at: (Part | null)[][] = Array.from({ length: PICTO_H }, () => Array(PICTO_W).fill(null));
-  for (let y = 0; y < PICTO_H; y++) for (let x = 0; x <= MID; x++) {
-    const p = parts.find((q) => inPoly(x + 0.5, y + 0.5, shapeOf(spec.view, q))) ?? null;
-    at[y]![x] = p; at[y]![2 * MID - x] = p;
+  const W = PICTO_W, H = PICTO_H;
+  const pieces = spec.view === 'front' ? FRONT : BACK;
+  // 실루엣: 0 = 밖, 1 = 근육 자리(몸통·팔), 2 = 흰 부분(머리·손·발)
+  const sil: number[][] = Array.from({ length: H }, () => Array(W).fill(0));
+  // 조각 번호: 왼쪽 짝수 / 오른쪽 홀수 (가운데 칸 40은 왼쪽) → 가운데에서도 갈라짐
+  const lab: number[][] = Array.from({ length: H }, () => Array(W).fill(-1));
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const right = x > CX;
+    const mx = right ? 2 * CX - x + 0.5 : x + 0.5, my = y + 0.5;
+    if (inHead(mx, my) || inPoly(mx, my, HAND) || inPoly(mx, my, FOOT)) { sil[y]![x] = 2; continue; }
+    if (!(inPoly(mx, my, BODY) || inPoly(mx, my, ARM))) continue;
+    sil[y]![x] = 1;
+    const i = pieces.findIndex((p) => inPoly(mx, my, p.poly));
+    if (i >= 0) { const band = pieces[i]!.bands?.filter((b) => my > b).length ?? 0; lab[y]![x] = (i * 8 + band) * 2 + (right ? 1 : 0); }
   }
-  const get = (x: number, y: number) => at[y]?.[x] ?? null;
-  // 근육 사이 얇은 틈(1~2칸)은 흰 선
-  const GAP: Part = { id: 'gap', group: null, pts: [] };
-  const muscle = (q: Part | null) => !!q && !q.skin && q !== GAP;
-  for (let y = 0; y < PICTO_H; y++) for (let x = 0; x < PICTO_W; x++) {
-    if (at[y]![x]) continue;
-    const near = (dx: number, dy: number) => { for (let k = 1; k <= 2; k++) { const q = get(x + dx * k, y + dy * k); if (q) return q; } return null; };
-    if ((muscle(near(-1, 0)) && muscle(near(1, 0))) || (muscle(near(0, -1)) && muscle(near(0, 1)))) at[y]![x] = GAP;
-  }
-  const on = new Set(spec.hl);
-  const g = blank(PICTO_W, PICTO_H);
-  for (let y = 0; y < PICTO_H; y++) for (let x = 0; x < PICTO_W; x++) {
-    const p = at[y]![x];
-    if (!p) continue;
-    if (p === GAP) { g[y]![x] = 'w'; continue; }
-    if (p.skin) {
-      const edge = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => get(x + dx!, y + dy!) !== p);
-      g[y]![x] = edge ? 'o' : 'h';
-      continue;
+  // 조각에 안 들어간 근육 자리 → 가장 가까운 조각 (한 칸씩 번져 나감)
+  for (let pass = 0; pass < 12; pass++) {
+    let changed = false;
+    const next = lab.map((r) => [...r]);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (sil[y]![x] !== 1 || lab[y]![x]! >= 0) continue;
+      for (const [dx, dy] of N4) { const o = lab[y + dy]?.[x + dx]; if (o !== undefined && o >= 0 && (x > CX) === (x + dx > CX)) { next[y]![x] = o; changed = true; break; } }
     }
-    const side = x < MID ? get(x + 1, y) : x > MID ? get(x - 1, y) : null;
-    const down = get(x, y + 1);
-    const differs = (q: Part | null) => muscle(q) && q !== p;
-    g[y]![x] = differs(side) || differs(down) ? 'w' : p.group && on.has(p.group) ? GROUP_COLOR[p.group] : 'm';
+    for (let y = 0; y < H; y++) lab[y] = next[y]!;
+    if (!changed) break;
   }
-  const inner = INNER[spec.view];
-  const paintW = (x: number, y: number) => { if (at[y]?.[x] && !at[y]![x]!.skin) g[y]![x] = 'w'; };
-  for (let y = inner.mid[0]; y <= inner.mid[1]; y++) paintW(MID, y);
-  for (const [x0, x1, yy] of inner.across) for (let x = Math.round(x0); x <= Math.round(2 * MID - x0); x++) { if (x > x1 && x < 2 * MID - x1) continue; paintW(x, Math.floor(yy)); }
-  for (const seg of inner.diag) {
-    const [[ax, ay], [bx, by]] = seg as [Pt, Pt];
-    const n = Math.ceil(Math.hypot(bx - ax, by - ay) * 2);
-    for (let i = 0; i <= n; i++) { const x = Math.floor(ax + ((bx - ax) * i) / n), y = Math.floor(ay + ((by - ay) * i) / n); paintW(x, y); paintW(2 * MID - x, y); }
+  const inBody = (x: number, y: number) => (sil[y]?.[x] ?? 0) > 0;
+  const isOutline = (x: number, y: number) => inBody(x, y) && N4.some(([dx, dy]) => !inBody(x + dx, y + dy));
+  const on = new Set(spec.hl);
+  const g = blank(W, H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (!inBody(x, y)) continue;
+    if (isOutline(x, y)) { g[y]![x] = 'o'; continue; }
+    const l = lab[y]![x]!;
+    if (sil[y]![x] === 2 || l < 0) { g[y]![x] = 'h'; continue; }
+    const piece = pieces[Math.floor(l / 16)]!;
+    // 간격 1칸: 테두리 옆 칸이거나, 다른 조각과 맞닿은 쪽(바깥 → 안쪽 옆 칸, 아래 칸)
+    const right = x > CX;
+    const sx = right ? x - 1 : x + 1;
+    const other = (xx: number, yy: number) => { const o = lab[yy]?.[xx]; return o !== undefined && sil[yy]![xx] === 1 && o !== l; };
+    const nearOutline = N4.some(([dx, dy]) => isOutline(x + dx, y + dy) || sil[y + dy]?.[x + dx] === 2);
+    const gap = nearOutline || (!(right && sx <= CX) && other(sx, y)) || other(x, y + 1);
+    g[y]![x] = gap ? 'h' : piece.group && on.has(piece.group) ? GROUP_COLOR[piece.group] : 'm';
   }
   return g;
 }

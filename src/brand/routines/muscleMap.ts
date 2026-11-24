@@ -4,8 +4,8 @@
 // 근육은 이웃과 살짝 겹치게 그리고, 뒤에 그린 근육의 흰 테두리가 경계선이 된다.
 
 export type Group = 'chest' | 'back' | 'shoulders' | 'biceps' | 'triceps' | 'forearms' | 'abs' | 'legs';
-type Pt = [number, number];
-interface Part { group: Group | null; pts: Pt[]; skin?: boolean; sharp?: boolean }
+export type Pt = [number, number];
+export interface Part { group: Group | null; pts: Pt[]; skin?: boolean; sharp?: boolean }
 
 export const MUSCLE_COLORS = {
   body: '#56708c', line: '#ffffff', skin: '#ffffff', skinLine: '#aebbc8',
@@ -84,6 +84,9 @@ const BACK: Part[] = [
 ];
 
 /** 근육 안쪽 흰 선: 앞 = 복근 가로줄·전거근 톱니 / 뒤 = 없음 (가운데 줄은 좌우 경계로 자동) */
+/** 픽셀 그림에서도 같은 근육 모양을 씀 */
+export const MUSCLE_PARTS = { front: FRONT, back: BACK } as const;
+
 const INNER: Record<'front' | 'back', string> = {
   front: [[86, 120], [86, 136], [86, 152]].map(([x, y]) => `M${x} ${y}H${MID}`).join('') + 'M66 101.5L71 103.5M66.8 107.5L71.6 109.2',
   back: '',
