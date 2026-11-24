@@ -59,22 +59,44 @@ test('루틴 편집: 짧게 누르고 움직이면 끌리지 않음', async ({ p
   await expect(page.locator('.ritem-name')).toHaveText(['바벨 벤치 프레스', '바벨 스쿼트']);
 });
 
-test('운동 중: 터치로 꾹 눌러 카드 순서 바꾸기, 놓을 때 세트 편집이 열리지 않음', async ({ page }) => {
+test('운동 중: 좌우로 밀어 운동 넘기기, ⋯ 메뉴에서 꾹 눌러 순서 바꾸기, 진행률 게이지', async ({ page }) => {
   await routineWith(page, ['바벨 벤치 프레스', '바벨 스쿼트']);
   await page.click('.topbar >> text=저장');
   await page.click('.routine-card');
   await sheet(page).locator('text=운동 시작').click();
-  await expect(page.locator('.ex-card .ex-name')).toHaveText(['바벨 벤치 프레스', '바벨 스쿼트']);
+  await expect(page.locator('.ex-page .ex-name')).toHaveText(['바벨 벤치 프레스', '바벨 스쿼트']);
   await expect(page.locator('.sheet')).toHaveCount(0);
-  const a = await page.locator('.ex-card').nth(0).boundingBox();
-  const b = await page.locator('.ex-card').nth(1).boundingBox();
-  // 세트 칸 위에서 꾹 누름 → 끌기 (놓은 뒤 세트 편집 시트가 열리면 안 됨)
-  const cell = await page.locator('.ex-card').nth(0).locator('.set-row .cell').first().boundingBox();
-  await touchDrag(page, { x: cell!.x + 20, y: cell!.y + 20 }, { x: cell!.x + 20, y: b!.y + b!.height - 10 + (cell!.y - a!.y) - 40 });
-  await expect(page.locator('.ex-card .ex-name')).toHaveText(['바벨 스쿼트', '바벨 벤치 프레스']);
-  await page.waitForTimeout(400);
-  await expect(page.locator('.sheet.open')).toHaveCount(0);
-  // 짧게 탭하면 세트 편집이 그대로 열림
-  await page.locator('.ex-card').nth(0).locator('.set-row .cell').first().tap();
-  await expect(page.locator('.sheet.open .seted')).toBeVisible();
+  // 운동 하나 = 한 화면: 두 번째 운동은 화면 밖(오른쪽)
+  const vw = page.viewportSize()!.width;
+  expect((await page.locator('.ex-page').nth(1).boundingBox())!.x).toBeGreaterThan(vw - 20);
+  // 점(위치 표시)을 눌러 두 번째 운동으로
+  await page.locator('.ex-dots .dot').nth(1).click();
+  await expect.poll(async () => (await page.locator('.ex-page').nth(1).boundingBox())!.x).toBeLessThan(30);
+  await expect(page.locator('.ex-dots .dot').nth(1)).toHaveClass(/on/);
+  // 진행률 게이지: 첫 세트 체크 → 0보다 커짐
+  await page.locator('.ex-page').nth(1).locator('.set-row .check').first().click();
+  await expect(page.locator('.bb-progress i')).not.toHaveAttribute('style', /width: 0%/);
+  // ⋯ → 운동 순서 바꾸기 → 꾹 눌러 끌기
+  await page.locator('.workout-top .icon-btn').last().click();
+  await sheet(page).locator('text=운동 순서 바꾸기').click();
+  const items = sheet(page).locator('.reorder-item');
+  await expect(items).toHaveCount(2);
+  await expect(page.locator('.sheet')).toHaveCount(1); // 앞의 메뉴 시트가 다 닫힐 때까지
+  const a = await items.nth(0).boundingBox();
+  const b = await items.nth(1).boundingBox();
+  await touchDrag(page, { x: a!.x + 40, y: a!.y + a!.height / 2 }, { x: a!.x + 40, y: b!.y + b!.height + 24 });
+  await expect(items).toHaveText(['바벨 스쿼트', '바벨 벤치 프레스']);
+  await expect(page.locator('.ex-page .ex-name')).toHaveText(['바벨 스쿼트', '바벨 벤치 프레스']);
+});
+
+test('운동 중: 마지막 세트를 체크하면 다음 운동으로 자동으로 넘어감', async ({ page }) => {
+  await routineWith(page, ['바벨 벤치 프레스', '바벨 스쿼트']);
+  await page.click('.topbar >> text=저장');
+  await page.click('.routine-card');
+  await sheet(page).locator('text=운동 시작').click();
+  await expect(page.locator('.sheet')).toHaveCount(0);
+  const checks = page.locator('.ex-page').nth(0).locator('.set-row .check');
+  const n = await checks.count();
+  for (let i = 0; i < n; i++) { await checks.nth(i).click(); await page.locator('.restbar .btn', { hasText: '닫기' }).click({ timeout: 800 }).catch(() => {}); }
+  await expect.poll(async () => (await page.locator('.ex-page').nth(1).boundingBox())!.x, { timeout: 4000 }).toBeLessThan(30);
 });

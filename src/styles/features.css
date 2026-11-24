@@ -27,6 +27,18 @@
 .clock { font-size: 26px; font-weight: 800; color: var(--accent); letter-spacing: 0.01em; }
 .page.workout { padding-bottom: 210px; }
 .ex-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
+/* 운동 넘기기: 운동 하나 = 한 화면, 좌우로 밀기 (다음 카드가 오른쪽에 살짝 보임) */
+.ex-pager { display: flex; align-items: flex-start; gap: 10px; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 0 16px 2px; scroll-padding: 0 16px; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none; transition: height 0.2s; }
+.ex-pager::-webkit-scrollbar { display: none; }
+.ex-page { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; scroll-snap-stop: always; }
+.add-card { display: flex; flex-direction: column; gap: 12px; padding: 22px 14px; }
+.ex-dots { display: flex; justify-content: center; align-items: center; gap: 6px; margin: 12px 0 6px; }
+.ex-dots .dot { width: 7px; height: 7px; padding: 0; border-radius: 99px; background: var(--line); transition: width 0.2s, background 0.2s; }
+.ex-dots .dot.on { width: 18px; background: var(--accent); }
+.ex-dots .dot.plus { width: 5px; height: 5px; }
+.ex-dots .dot.plus.on { width: 12px; }
+.reorder-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.reorder-item { display: flex; align-items: center; gap: 10px; padding: 14px; border-radius: 14px; background: var(--card2); font-weight: 600; }
 .ex-card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 14px 12px 12px; }
 .ex-card.complete { border-color: rgba(11, 143, 98, 0.45); }
 .ex-head { display: flex; align-items: center; gap: 12px; }
@@ -71,6 +83,8 @@
 .restbar.done .rest-label { color: #9a6400; }
 @keyframes pulse { 50% { box-shadow: 0 0 0 6px rgba(255, 181, 71, 0.25); } }
 
+.bb-progress { position: absolute; left: 0; right: 0; top: -1px; height: 5px; background: var(--line); }
+.bb-progress i { display: block; height: 100%; background: var(--accent); transition: width 0.35s ease; }
 .bottombar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px calc(12px + var(--bottom-pad)); background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--line); }
 .bb-main { font-size: 20px; font-weight: 800; }
 
