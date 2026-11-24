@@ -1,4 +1,4 @@
-// 홈: 루틴 ⋯ 메뉴(그룹으로 관리·이름 변경·삭제), 그룹 접기, 꾹 눌러 끌어서 순서 바꾸기
+// 홈: 루틴 ⋯ 메뉴(수정·그룹으로 관리·삭제), 그룹 접기, 꾹 눌러 끌어서 순서 바꾸기
 import { expect, test, type Page } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => { page.on('pageerror', (e) => { throw e; }); });
@@ -17,14 +17,14 @@ async function makeRoutine(page: Page, name: string, exercise: string) {
 }
 const names = (page: Page) => page.locator('.routine-card .routine-name');
 
-test('⋯ 메뉴: 그룹으로 관리 → 새 그룹, 접기, 이름 변경, 삭제', async ({ page }) => {
+test('⋯ 메뉴: 그룹으로 관리 → 새 그룹, 접기, 수정(이름), 삭제', async ({ page }) => {
   await page.goto('/');
   await makeRoutine(page, '가슴날', '바벨 벤치 프레스');
   await makeRoutine(page, '등날', '바벨 데드리프트');
   await makeRoutine(page, '하체날', '바벨 스쿼트');
 
   await page.click('[aria-label="가슴날 메뉴"]');
-  await expect(page.locator('.pop-menu .pop-item')).toHaveText(['그룹으로 관리', '이름 변경', '삭제']);
+  await expect(page.locator('.pop-menu .pop-item')).toHaveText(['수정', '그룹으로 관리', '삭제']);
   await page.click('.pop-item:has-text("그룹으로 관리")');
   await sheet(page).locator('input[placeholder="새 그룹 이름"]').fill('상체');
   await sheet(page).locator('text=추가').click();
@@ -47,11 +47,12 @@ test('⋯ 메뉴: 그룹으로 관리 → 새 그룹, 접기, 이름 변경, 삭
   await page.click('.group-head');
   await expect(names(page)).toHaveCount(3);
 
-  // 이름 변경
+  // 수정 → 루틴 편집 화면에서 이름 바꾸기
   await page.click('[aria-label="하체날 메뉴"]');
-  await page.click('.pop-item:has-text("이름 변경")');
-  await sheet(page).locator('input').fill('하체 데이');
-  await sheet(page).locator('text=저장').click();
+  await page.click('.pop-item:has-text("수정")');
+  await expect(page).toHaveURL(/#\/routine\//);
+  await page.fill('.title-input', '하체 데이');
+  await page.click('.topbar >> text=저장');
   await expect(page.locator('.routine-card', { hasText: '하체 데이' })).toBeVisible();
 
   // 삭제

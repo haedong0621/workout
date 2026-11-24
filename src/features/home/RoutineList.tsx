@@ -4,6 +4,7 @@ import { applyRoutineDrop, routineRows } from '@/domain/routineGroups';
 import type { Routine } from '@/domain/types';
 import { fmtMD } from '@/lib/format';
 import { groupActions, routineActions, routineLastRun, routines, settings } from '@/store';
+import { go, paths } from '@/app/router';
 import { confirmSheet, promptSheet } from '@/ui/dialogs';
 import { Icon } from '@/ui/Icon';
 import { openMenu } from '@/ui/popover';
@@ -57,15 +58,12 @@ function RoutineCard({ r, last, sort, onOpen }: { r: Routine; last: number | und
 
 async function routineMenu(r: Routine, anchor: HTMLElement) {
   const c = await openMenu(anchor, [
+    { value: 'edit', label: '수정', icon: 'edit' },
     { value: 'group', label: '그룹으로 관리', icon: 'folder' },
-    { value: 'rename', label: '이름 변경', icon: 'edit' },
     { value: 'delete', label: '삭제', icon: 'trash', danger: true },
   ]);
+  if (c === 'edit') go(paths.routine(r.id));
   if (c === 'group') await groupSheet(r);
-  if (c === 'rename') {
-    const v = await promptSheet({ title: '루틴 이름 변경', value: r.name, ok: '저장' });
-    if (v?.trim()) routineActions.renameRoutine(r.id, v);
-  }
   if (c === 'delete') {
     const ok = await confirmSheet({ title: `"${r.name}" 루틴을 삭제할까요?`, message: '지난 운동 기록은 그대로 남아요.', ok: '삭제', danger: true });
     if (ok) { routineActions.deleteRoutine(r.id); toast('루틴을 삭제했어요'); }
