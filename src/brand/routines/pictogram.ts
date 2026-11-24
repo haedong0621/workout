@@ -5,19 +5,18 @@
 // 모든 모양은 왼쪽 반(칸 좌표, 가운데 = 40)으로 정의하고 거울로 복사.
 import { blank, type Grid } from '../pixelArt.ts';
 
-export const PICTO_W = 81;
+export const PICTO_W = 101;
 export const PICTO_H = 128;
-const CX = 40;
+const CX = 50;
+const OFF = 10;                         // 도형 좌표(가운데 40) → 칸 좌표(가운데 50)
 
 export type Group = 'chest' | 'back' | 'shoulders' | 'biceps' | 'triceps' | 'forearms' | 'abs' | 'legs';
 
 export const PICTO_PALETTE: Record<string, string> = {
-  o: '#aebbc8',   // 몸 테두리
-  h: '#ffffff',   // 몸 바탕·간격·머리·손·발
-  m: '#56708c',   // 근육
-  c: '#f2595d', k: '#4f86ee', s: '#22c7b2', a: '#a77bfa', l: '#f7b733', b: '#fb8f45',
+  f: '#dbe7f6',   // 몸(하늘색)
+  L: '#5b80b9',   // 테두리·근육 선(진한 파랑)
+  r: '#f28b82',   // 강조(산호색)
 };
-const GROUP_COLOR: Record<Group, string> = { chest: 'c', back: 'k', shoulders: 's', biceps: 'a', triceps: 'a', forearms: 'a', abs: 'b', legs: 'l' };
 
 type Pt = [number, number];
 const inPoly = (x: number, y: number, p: Pt[]) => {
@@ -40,7 +39,7 @@ const ARM: Pt[] = [
   [19.4, 19.6], [12, 21.4], [7, 25.6], [4.6, 31], [4.4, 37], [5, 44], [5.4, 50], [4.6, 56], [5.6, 63], [7.6, 69],
   [13, 69], [14.4, 62], [15.2, 55], [15.6, 49], [16, 43], [16.6, 37.4], [17.8, 33],
 ];
-const HAND: Pt[] = [[7, 68.6], [14, 68.6], [15.2, 72.6], [14.6, 77], [12.2, 80], [8.4, 79.6], [6.4, 74.6]];
+const HAND: Pt[] = [[6.8, 68.4], [14, 68.4], [15.2, 72.4], [15.8, 77.6], [14.6, 81.8], [12.6, 82.8], [10.6, 82.6], [8.8, 81.6], [7.4, 78.6], [6.6, 74.8], [4.8, 73.6], [4.2, 71.6], [5.6, 70.4]];
 const FOOT: Pt[] = [[28, 119.6], [36, 119.6], [37, 123.2], [37.8, 127.4], [25.8, 127.4], [26.6, 123.2]];
 
 // ── 근육 조각 ──────────────────────────────────────
@@ -85,24 +84,51 @@ export interface PictoSpec { view: 'front' | 'back'; hl: Group[] }
 
 const N4 = [[1, 0], [-1, 0], [0, 1], [0, -1]] as const;
 
+// ── 몸 비율·자세 보정: 가로로 0.85배(운동한 체형), 팔은 어깨를 축으로 바깥으로 18° 벌림(A자) ──
+const SCALE_X = 0.78;
+const ARM_ANGLE = (18 * Math.PI) / 180;
+const PIVOT: Pt = [40 - (40 - 17) * SCALE_X, 24];
+/** arm: 'thin' = 팔(굵기 0.8배로 가늘게 + 벌림), 'rot' = 어깨(벌림만), false = 몸통 */
+function tf(poly: Pt[], arm: 'thin' | 'rot' | false): Pt[] {
+  return poly.map(([x0, y]) => {
+    const x = arm === 'thin' ? 11 + (x0 - 11) * 0.8 : x0;
+    // 가운데(40.5 이상)에 닿는 점은 가운데를 살짝 넘게 → 좌우가 가운데 칸에서 정확히 만남
+    let nx = x0 >= 40.4 ? 41 : 40 - (40 - x) * SCALE_X, ny = y;
+    if (arm) {
+      const dx = nx - PIVOT[0], dy = ny - PIVOT[1];
+      nx = PIVOT[0] + dx * Math.cos(ARM_ANGLE) - dy * Math.sin(ARM_ANGLE);
+      ny = PIVOT[1] + dx * Math.sin(ARM_ANGLE) + dy * Math.cos(ARM_ANGLE);
+    }
+    return [nx + OFF, ny] as Pt;
+  });
+}
+const ARM_GROUPS = new Set<Group | null>(['biceps', 'triceps', 'forearms']);
+const armMode = (g: Group | null) => (ARM_GROUPS.has(g) ? 'thin' : g === 'shoulders' ? 'rot' : false);
+const SIL = { body: tf(BODY, false), arm: tf(ARM, 'thin'), shoulder: tf(DELT.poly, 'rot'), hand: tf(HAND, 'rot'), foot: tf(FOOT, false) };
+const headIn = (x: number, y: number) => inHead(x - OFF, y);
+const PIECES = {
+  front: FRONT.map((p) => ({ ...p, poly: tf(p.poly, armMode(p.group)) })),
+  back: BACK.map((p) => ({ ...p, poly: tf(p.poly, armMode(p.group)) })),
+};
+
 export function drawPicto(spec: PictoSpec): Grid {
   const W = PICTO_W, H = PICTO_H;
-  const pieces = spec.view === 'front' ? FRONT : BACK;
-  // 실루엣: 0 = 밖, 1 = 근육 자리(몸통·팔), 2 = 흰 부분(머리·손·발)
+  const pieces = PIECES[spec.view];
+  // 실루엣: 0 = 밖, 1 = 근육 자리, 2 = 머리·손·발
   const sil: number[][] = Array.from({ length: H }, () => Array(W).fill(0));
-  // 조각 번호: 왼쪽 짝수 / 오른쪽 홀수 (가운데 칸 40은 왼쪽) → 가운데에서도 갈라짐
+  // 조각 번호: 왼쪽 짝수 / 오른쪽 홀수 (가운데 칸은 왼쪽)
   const lab: number[][] = Array.from({ length: H }, () => Array(W).fill(-1));
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const right = x > CX;
     const mx = right ? 2 * CX - x + 0.5 : x + 0.5, my = y + 0.5;
-    if (inHead(mx, my) || inPoly(mx, my, HAND) || inPoly(mx, my, FOOT)) { sil[y]![x] = 2; continue; }
-    if (!(inPoly(mx, my, BODY) || inPoly(mx, my, ARM))) continue;
+    if (headIn(mx, my) || inPoly(mx, my, SIL.hand) || inPoly(mx, my, SIL.foot)) { sil[y]![x] = 2; lab[y]![x] = -2; continue; }
+    if (!(inPoly(mx, my, SIL.body) || inPoly(mx, my, SIL.arm) || inPoly(mx, my, SIL.shoulder))) continue;
     sil[y]![x] = 1;
     const i = pieces.findIndex((p) => inPoly(mx, my, p.poly));
     if (i >= 0) { const band = pieces[i]!.bands?.filter((b) => my > b).length ?? 0; lab[y]![x] = (i * 8 + band) * 2 + (right ? 1 : 0); }
   }
-  // 조각에 안 들어간 근육 자리 → 가장 가까운 조각 (한 칸씩 번져 나감)
-  for (let pass = 0; pass < 12; pass++) {
+  // 조각에 안 들어간 근육 자리 → 가장 가까운 조각
+  for (let pass = 0; pass < 14; pass++) {
     let changed = false;
     const next = lab.map((r) => [...r]);
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -113,22 +139,21 @@ export function drawPicto(spec: PictoSpec): Grid {
     if (!changed) break;
   }
   const inBody = (x: number, y: number) => (sil[y]?.[x] ?? 0) > 0;
-  const isOutline = (x: number, y: number) => inBody(x, y) && N4.some(([dx, dy]) => !inBody(x + dx, y + dy));
   const on = new Set(spec.hl);
   const g = blank(W, H);
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     if (!inBody(x, y)) continue;
-    if (isOutline(x, y)) { g[y]![x] = 'o'; continue; }
+    // 바깥 테두리
+    if (N4.some(([dx, dy]) => !inBody(x + dx, y + dy))) { g[y]![x] = 'L'; continue; }
     const l = lab[y]![x]!;
-    if (sil[y]![x] === 2 || l < 0) { g[y]![x] = 'h'; continue; }
-    const piece = pieces[Math.floor(l / 16)]!;
-    // 간격 1칸: 테두리 옆 칸이거나, 다른 조각과 맞닿은 쪽(바깥 → 안쪽 옆 칸, 아래 칸)
+    // 근육 선: 바깥 → 안쪽 옆 칸, 아래 칸이 다른 조각이면 (가운데 줄은 한 번만)
     const right = x > CX;
     const sx = right ? x - 1 : x + 1;
-    const other = (xx: number, yy: number) => { const o = lab[yy]?.[xx]; return o !== undefined && sil[yy]![xx] === 1 && o !== l; };
-    const nearOutline = N4.some(([dx, dy]) => isOutline(x + dx, y + dy) || sil[y + dy]?.[x + dx] === 2);
-    const gap = nearOutline || (!(right && sx <= CX) && other(sx, y)) || other(x, y + 1);
-    g[y]![x] = gap ? 'h' : piece.group && on.has(piece.group) ? GROUP_COLOR[piece.group] : 'm';
+    const other = (xx: number, yy: number) => { const o = lab[yy]?.[xx]; return o !== undefined && inBody(xx, yy) && o !== l; };
+    const line = (!(right && sx <= CX) && other(sx, y)) || other(x, y + 1);
+    if (line) { g[y]![x] = 'L'; continue; }
+    const piece = l >= 0 ? pieces[Math.floor(l / 16)] : undefined;
+    g[y]![x] = piece?.group && on.has(piece.group) ? 'r' : 'f';
   }
   return g;
 }
