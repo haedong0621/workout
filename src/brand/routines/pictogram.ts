@@ -63,7 +63,7 @@ const ARM: Pt[] = [
 ];
 
 // ── 근육 조각(그림 좌표, 왼쪽 반). 앞에 있는 것이 우선 ──
-// base: 바탕색으로 남기는 자리(목·무릎·발목) / merge: 같은 이름끼리 틈 없음 / seam false: 가운데 틈 없음
+// base: 바탕색으로 남기는 자리 / merge: 같은 이름끼리 틈 없음 / seam false: 가운데 틈 없음
 interface Piece { group: Group | null; poly: Pt[]; bands?: number[]; merge?: string; seam?: false; base?: true }
 const P = (group: Group | null, poly: Pt[], opt: Omit<Piece, 'group' | 'poly'> = {}): Piece => ({ group, poly, ...opt });
 const FOREARMS: Piece[] = [
@@ -71,7 +71,7 @@ const FOREARMS: Piece[] = [
   P('forearms', [[131, 398], [175, 398], [140, 462], [110, 525], [86, 512], [100, 470], [118, 430]]),                     // 안쪽
 ];
 const FRONT: Piece[] = [
-  P(null, [[237, 140], [274, 140], [274, 228], [256, 224], [244, 190]], { base: true }),                                  // 목
+  P(null, [[237, 140], [274, 140], [274, 228], [256, 224], [244, 190]], { seam: false }),                                  // 목
   P('back', [[237, 140], [244, 190], [256, 224], [192, 226], [160, 222], [190, 205], [215, 188], [230, 176]]),           // 승모
   P('shoulders', [[190, 213], [193, 230], [190, 250], [185, 270], [176, 288], [162, 289], [150, 293], [117, 307], [110, 290], [117, 262], [130, 238], [150, 225], [165, 218]]),
   P('chest', [[193, 226], [274, 230], [274, 306], [268, 306], [250, 314], [232, 326], [215, 331], [195, 326], [178, 313], [166, 299], [176, 288], [185, 270], [190, 250]]),
@@ -82,7 +82,7 @@ const FRONT: Piece[] = [
   P('legs', [[172, 746], [186, 739], [205, 739], [213, 751], [211, 772], [197, 786], [181, 784], [168, 775], [165, 758]]), // 무릎뼈
   P('legs', [[140, 482], [176, 493], [200, 516], [214, 560], [219, 610], [216, 650], [206, 690], [195, 720], [186, 739], [172, 746], [140, 746]]), // 허벅지 바깥
   P('legs', [[200, 516], [225, 536], [248, 561], [265, 579], [274, 584], [274, 741], [186, 739], [195, 720], [206, 690], [216, 650], [219, 610], [214, 560]]), // 허벅지 안쪽
-  P(null, [[140, 950], [250, 935], [250, 1080], [100, 1080]], { base: true }),                                           // 발목
+  P(null, [[140, 950], [250, 935], [250, 1080], [100, 1080]], { merge: 'foot' }),                                        // 발목(발과 한 조각)
   P('calves', [[140, 784], [197, 786], [214, 793], [203, 812], [197, 830], [193, 848], [193, 880], [191, 902], [197, 920], [201, 940], [205, 952], [166, 952], [140, 958]]), // 종아리 바깥·정강이
   P('calves', [[214, 795], [250, 795], [250, 935], [214, 935], [205, 952], [198, 932], [193, 902], [192, 870], [194, 845], [199, 822], [206, 805]]), // 종아리 안쪽
 ];
@@ -98,7 +98,7 @@ const BACK: Piece[] = [
   P('calves', [[140, 772], [203, 772], [201, 830], [200, 875], [182, 902], [160, 885], [148, 840]]),                      // 종아리 바깥
   P('calves', [[203, 772], [250, 772], [242, 850], [226, 895], [208, 898], [200, 875], [201, 830]]),                      // 종아리 안쪽
   P('calves', [[140, 840], [148, 840], [160, 885], [182, 902], [200, 875], [208, 898], [226, 895], [242, 850], [250, 850], [250, 935], [140, 945]]), // 가자미근
-  P(null, [[140, 945], [250, 935], [250, 1080], [100, 1080]], { base: true }),                                           // 발목
+  P(null, [[140, 945], [250, 935], [250, 1080], [100, 1080]], { merge: 'foot' }),                                        // 발목(발과 한 조각)
 ];
 
 export interface PictoSpec { view: 'front' | 'back'; hl: Group[]; heart?: boolean }
@@ -120,8 +120,9 @@ function drawHeart(g: Grid) {
 export function drawPicto(spec: PictoSpec): Grid {
   const W = PICTO_W, H = PICTO_H;
   const back = spec.view === 'back';
-  const pieces = back ? BACK : FRONT;
   const body = back ? BODY_BACK : BODY, foot = back ? FOOT_BACK : FOOT;
+  // 머리·손·발도 조각 (발은 발목과 한 조각)
+  const pieces = [P(null, HEAD, { seam: false }), P(null, HAND), P(null, foot, { merge: 'foot' }), ...(back ? BACK : FRONT)];
   const on = new Set<Group>(spec.hl);
   if (on.has('legs')) on.add('calves');
   // 칸 → 그림 좌표 (왼쪽 반으로 접기)
@@ -131,8 +132,7 @@ export function drawPicto(spec: PictoSpec): Grid {
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const [ix, iy] = toImg(x, y);
     const right = x > CX;
-    if (inPoly(ix, iy, HEAD) || inPoly(ix, iy, HAND) || inPoly(ix, iy, foot)) { sil[y]![x] = 2; lab[y]![x] = -2; continue; }
-    if (!(inPoly(ix, iy, body) || inPoly(ix, iy, ARM))) continue;
+    if (![body, ARM, HEAD, HAND, foot].some((poly) => inPoly(ix, iy, poly))) continue;
     sil[y]![x] = 1;
     const i = pieces.findIndex((p) => inPoly(ix, iy, p.poly));
     if (i >= 0) {
@@ -161,12 +161,12 @@ export function drawPicto(spec: PictoSpec): Grid {
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     if (!inBody(x, y)) continue;
     const l = lab[y]![x]!;
-    // 바탕: 머리·손·발, 목·발목, 실루엣 가장자리 2칸, 조각 사이 틈 2칸(양쪽 1칸씩)
+    // 바탕: 실루엣 가장자리 2칸, 조각 사이 틈 2칸(양쪽 1칸씩)
     if (isBase(x, y)) { g[y]![x] = 'b'; continue; }
     let gap = false;
     for (let dy = -GAP; dy <= GAP && !gap; dy++) for (let dx = -GAP; dx <= GAP && !gap; dx++) {
       const xx = x + dx, yy = y + dy;
-      const edge = !inBody(xx, yy) || sil[yy]![xx] === 2 || isBase(xx, yy);
+      const edge = !inBody(xx, yy) || isBase(xx, yy);
       if (edge) gap = Math.max(Math.abs(dx), Math.abs(dy)) <= EDGE;
       else if (Math.max(Math.abs(dx), Math.abs(dy)) <= 1 && key(lab[yy]![xx]!) !== key(l)) gap = true;
     }
