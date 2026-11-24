@@ -1,6 +1,7 @@
 // 종목 상세: 이미지, 최고 기록, 그래프, 메모(수정하면 날짜 자동 갱신), 휴식, 기록 목록
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { exerciseHistory, metricOf, personalRecords, pinnedFirst, type ChartMetric } from '@/domain/history';
+import { exerciseHistory, lastUsedOption, metricOf, personalRecords, pinnedFirst, type ChartMetric } from '@/domain/history';
+import { TOGGLE_OPTIONS } from '@/domain/catalog';
 import { fmtMD, fmtNum, fmtYMD } from '@/lib/format';
 import { pickImageFile, processImage } from '@/services/imageFile';
 import { exerciseActions, exerciseMap, imgURL, includeWarmup, replaceImage, restFor, sessions } from '@/store';
@@ -23,7 +24,10 @@ export function ExerciseDetailPage({ params }: RouteProps) {
   const [metric, setMetric] = useState<ChartMetric>('volume');
   const [range, setRange] = useState<Range>('recent');
   const inc = includeWarmup.value;
-  const hist = useMemo(() => (ex ? exerciseHistory(sessions.value, ex.id, { includeWarmup: inc }) : []), [sessions.value, ex?.id, inc]);
+  // 바·머신 토글 운동은 옵션별로 기록을 따로 봄 (맨몸은 한 줄로)
+  const opts = ex?.toggle && ex.toggle !== 'body' ? TOGGLE_OPTIONS[ex.toggle] : null;
+  const [opt, setOpt] = useState<string | undefined>(() => (opts ? lastUsedOption(sessions.value, ex!.id) ?? opts[0] : undefined));
+  const hist = useMemo(() => (ex ? exerciseHistory(sessions.value, ex.id, { includeWarmup: inc, opt: { toggle: ex.toggle, value: opt } }) : []), [sessions.value, ex?.id, inc, opt]);
 
   if (!ex) return <div class="page"><EmptyState title="운동을 찾을 수 없어요" action="종목으로" onAction={() => go(paths.library, { replace: true })} /></div>;
 
@@ -64,9 +68,10 @@ export function ExerciseDetailPage({ params }: RouteProps) {
         </button>
         <div class="hero-name">{ex.name}</div>
         <div class="chips center">
-          <span class="tag">{ex.part}</span><span class="tag">{ex.equip}</span>
-          {ex.kind === 'assist' && <span class="tag accent">어시스트</span>}
-          {ex.kind === 'bodyweight' && <span class="tag accent">체중+추가</span>}
+          <span class="tag">{ex.part}</span>
+          <span class="tag">{ex.toggle ? TOGGLE_OPTIONS[ex.toggle].join('/') : ex.equip}</span>
+          {!ex.toggle && ex.kind === 'assist' && <span class="tag accent">어시스트</span>}
+          {!ex.toggle && ex.kind === 'bodyweight' && <span class="tag accent">체중+추가</span>}
         </div>
         {!ex.imageId && <div class="sub">이미지를 눌러 사진·움짤로 바꿀 수 있어요</div>}
       </div>
@@ -76,6 +81,13 @@ export function ExerciseDetailPage({ params }: RouteProps) {
         <button class={'btn ghost small' + (ex.fav ? ' on' : '')} type="button" onClick={() => exerciseActions.toggleFav(ex.id)}><Icon name="star" size={16} />{ex.fav ? ' 즐겨찾기 해제' : ' 즐겨찾기'}</button>
         <button class="btn danger-ghost small" type="button" aria-label="삭제" onClick={remove}><Icon name="trash" size={16} /></button>
       </div>
+
+      {opts && opt && (
+        <div class="opt-row">
+          <div class="ex-toggle"><Segmented options={opts.map((o) => [o, o] as [string, string])} value={opt} onChange={setOpt} /></div>
+          <div class="sub">고른 옵션의 최고 기록 · 그래프 · 운동 기록만 보여요</div>
+        </div>
+      )}
 
       <div class="stat-row">
         <StatTile label="최고 중량" value={pr.pr ? fmtNum(pr.pr) : '–'} unit="kg" />

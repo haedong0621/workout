@@ -43,6 +43,15 @@ export function swapExercise(sessionId: string, idx: number, ex: Exercise): void
   });
 }
 
+/** 운동 중 장비 토글 바꾸기 (바벨/스미스, 핀/플레이트, 어시스트/중량) */
+export function setItemOption(sessionId: string, idx: number, opt: string): void {
+  updateSession(sessionId, (s) => {
+    const it = s.items[idx];
+    const ex = it ? exercises.value.find((e) => e.id === it.exerciseId) : undefined;
+    return ex ? W.setItemOption(s, idx, ex, opt, sessions.value) : s;
+  });
+}
+
 export const setSessionField = (id: string, patch: Partial<Pick<Session, 'name' | 'bw' | 'endedAt'>>) =>
   updateSession(id, (s) => ({ ...s, ...patch }));
 

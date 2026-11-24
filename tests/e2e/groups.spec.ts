@@ -19,9 +19,9 @@ const names = (page: Page) => page.locator('.routine-card .routine-name');
 
 test('⋯ 메뉴: 그룹으로 관리 → 새 그룹, 접기, 이름 변경, 삭제', async ({ page }) => {
   await page.goto('/');
-  await makeRoutine(page, '가슴날', '벤치 프레스');
-  await makeRoutine(page, '등날', '데드리프트');
-  await makeRoutine(page, '하체날', '스쿼트');
+  await makeRoutine(page, '가슴날', '바벨 벤치 프레스');
+  await makeRoutine(page, '등날', '바벨 데드리프트');
+  await makeRoutine(page, '하체날', '바벨 스쿼트');
 
   await page.click('[aria-label="가슴날 메뉴"]');
   await expect(page.locator('.pop-menu .pop-item')).toHaveText(['그룹으로 관리', '이름 변경', '삭제']);
@@ -65,8 +65,8 @@ test('⋯ 메뉴: 그룹으로 관리 → 새 그룹, 접기, 이름 변경, 삭
 
 test('홈: 꾹 눌러 끌어서 순서 바꾸고, 그룹 밖으로 빼기', async ({ page }) => {
   await page.goto('/');
-  await makeRoutine(page, 'A', '벤치 프레스');
-  await makeRoutine(page, 'B', '데드리프트');
+  await makeRoutine(page, 'A', '바벨 벤치 프레스');
+  await makeRoutine(page, 'B', '바벨 데드리프트');
   // 새로 만든 루틴이 위 → B, A
   await expect(names(page)).toHaveText(['B', 'A']);
   const drag = async (fromName: string, toY: (box: { y: number; height: number }) => number, target: string) => {

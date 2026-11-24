@@ -1,7 +1,8 @@
 // 운동 선택 시트 (검색·초성·부위·장비 필터, 새 운동 만들기)
 import { useMemo, useState } from 'preact/hooks';
 import { EQUIPS, PARTS } from '@/domain/constants';
-import { matchName } from '@/domain/search';
+import { matchExercise } from '@/domain/search';
+import { TOGGLE_OPTIONS } from '@/domain/catalog';
 import type { Exercise } from '@/domain/types';
 import { sortedExercises } from '@/store';
 import { ChipRow, EmptyState } from '@/ui/controls';
@@ -13,8 +14,11 @@ import { exerciseForm } from './ExerciseForm';
 const ALL = '전체';
 type Filter<T extends readonly string[]> = typeof ALL | T[number];
 
-export const exerciseSubtitle = (e: Pick<Exercise, 'part' | 'equip' | 'kind'>): string =>
-  `${e.part} · ${e.equip}${e.kind === 'assist' ? ' · 어시스트' : e.kind === 'bodyweight' ? ' · 체중' : ''}`;
+/** 목록 설명 줄: 부위 · 장비 (토글 운동은 고를 수 있는 옵션: 바벨/스미스) */
+export const exerciseSubtitle = (e: Pick<Exercise, 'part' | 'equip' | 'kind' | 'toggle'>): string =>
+  e.toggle
+    ? `${e.part} · ${TOGGLE_OPTIONS[e.toggle].join('/')}`
+    : `${e.part} · ${e.equip}${e.kind === 'assist' ? ' · 어시스트' : e.kind === 'bodyweight' ? ' · 체중' : ''}`;
 
 export function filterExercises(list: readonly Exercise[], f: { q: string; part: string; equip: string; favOnly?: boolean; exclude?: readonly string[] }): Exercise[] {
   return list.filter((e) =>
@@ -22,7 +26,7 @@ export function filterExercises(list: readonly Exercise[], f: { q: string; part:
     && (!f.favOnly || e.fav)
     && (f.part === ALL || e.part === f.part)
     && (f.equip === ALL || e.equip === f.equip)
-    && matchName(e.name, f.q));
+    && matchExercise(e, f.q));
 }
 
 function PickerBody({ multi, exclude, close }: { multi: boolean; exclude: readonly string[]; close: CloseFn<string[]> }) {

@@ -5,7 +5,7 @@ import { itemStats, sessionStats } from '@/domain/volume';
 import { shiftStart } from '@/domain/workout';
 import { dateKey, fmtDur, fmtFull, fmtNum, fmtTime, fmtYMD } from '@/lib/format';
 import { parseNum } from '@/lib/num';
-import { findById, includeWarmup, routineActions, sessions, workoutActions } from '@/store';
+import { exerciseMap, findById, includeWarmup, routineActions, sessions, workoutActions } from '@/store';
 import { back, go, paths, type RouteProps } from '@/app/router';
 import { Card, DiffBadge, EmptyState, TopBar } from '@/ui/controls';
 import { choiceSheet, confirmSheet, promptSheet } from '@/ui/dialogs';
@@ -41,7 +41,7 @@ export function SessionDetailPage({ params }: RouteProps) {
       {s.items.map((it, idx) => {
         const ist = itemStats(it, s.bw, inc);
         if (!ist.setCount) return null;
-        const prev = previousEntry(sessions.value, s, it.exerciseId, inc);
+        const prev = previousEntry(sessions.value, s, it.exerciseId, inc, { toggle: exerciseMap.value.get(it.exerciseId)?.toggle, value: it.opt });
         return (
           <Card key={idx} class="ex-sum"
             title={<div><div class="card-title">{it.name}</div><div class="sub">{it.part} · {it.equip}</div></div>}

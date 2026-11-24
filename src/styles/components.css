@@ -37,6 +37,9 @@
 
 .seg { display: inline-flex; background: var(--card2); border-radius: 12px; padding: 3px; }
 .seg-btn { padding: 7px 12px; border-radius: 9px; font-size: 13px; font-weight: 700; color: var(--sub); }
+.ex-toggle { margin: 10px 0 2px; }
+.ex-toggle .seg { display: flex; width: 100%; }
+.ex-toggle .seg-btn { flex: 1; }
 .seg-btn.active { box-shadow: 0 1px 3px rgba(0,0,0,0.15); background: #ffffff; color: var(--text); }
 
 .toggle { width: 50px; height: 30px; border-radius: 999px; background: #cfd5dc; position: relative; flex: none; transition: background 0.2s; }

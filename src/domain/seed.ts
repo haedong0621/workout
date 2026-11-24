@@ -1,9 +1,12 @@
 // 처음 설치했을 때 한 번만 들어가는 기본 운동 목록 (settings.seeded로 기록)
 // ⚠️ 여기를 고쳐도 이미 쓰고 있는 폰의 목록은 바뀌지 않아요.
+// v2.6.0부터 기본 목록은 catalog.ts(이름·토글 규칙). 아래 SEED는 예전(v2.5 이전) 목록 — 예전 id 확인용으로만 남김.
+import { CATALOG, kindFor } from './catalog.ts';
 import type { Exercise, ExerciseKind } from './types';
 
 type SeedRow = [name: string, part: string, equip: string, kind?: ExerciseKind];
 
+/** 예전 기본 목록 (v2.5 이전, id = 'seed-' + 순서) */
 export const SEED: readonly SeedRow[] = [
   // 가슴
   ['벤치 프레스', '가슴', '바벨'],
@@ -67,17 +70,18 @@ export const SEED: readonly SeedRow[] = [
   ['케이블 크런치', '복근', '케이블'],
 ];
 
-/** id는 'seed-0' … 고정값(기존 기록과 연결되므로 바꾸지 마세요) */
+/** 새로 설치할 때 넣는 기본 운동 (id는 catalog.ts에 고정) */
 export function seedExercises(now = Date.now()): Exercise[] {
-  return SEED.map(([name, part, equip, kind], i) => ({
-    id: 'seed-' + i,
-    name, part, equip,
-    kind: kind ?? 'normal',
+  return CATALOG.map((e, i) => ({
+    id: e.id,
+    name: e.name, part: e.part, equip: e.equip,
+    kind: kindFor(e.toggle),
     rest: null,
     imageId: null,
     memo: '', memoAt: null,
     fav: false, pinned: [],
     seed: true,
     createdAt: now + i,
+    toggle: e.toggle, aka: e.aka,
   }));
 }

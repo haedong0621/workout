@@ -163,6 +163,10 @@ export const CATALOG: readonly CatalogEntry[] = Object.entries(BY_PART).flatMap(
   })),
 );
 
+/** 직접 만드는 운동: 장비로 토글 정하기 (바벨 → 바벨·스미스, 머신 → 핀·플레이트, 맨몸 → 어시스트·중량) */
+export const toggleForEquip = (equip: string): ExerciseToggle | null =>
+  equip === '바벨' ? 'bar' : equip === '머신' ? 'machine' : equip === '맨몸' ? 'body' : null;
+
 /** 토글 운동의 기본 무게 방식 (맨몸은 고른 옵션에 따라 바뀜) */
 export const kindFor = (toggle: ExerciseToggle | null, opt?: string): ExerciseKind =>
   toggle !== 'body' ? 'normal' : opt === '중량' ? 'bodyweight' : 'assist';

@@ -32,14 +32,17 @@ test.beforeEach(async ({ page }) => {
   page.on('pageerror', (e) => { throw e; });
 });
 
-test('첫 실행: 기본 운동 54개, 탭 이동', async ({ page }) => {
+test('첫 실행: 기본 운동 98개, 탭 이동, 다른 이름 검색', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('h1')).toHaveText('운동 일지');
   await page.click('#tabbar >> text=종목');
-  await expect(page.locator('.page-head .sub')).toHaveText('54개');
+  await expect(page.locator('.page-head .sub')).toHaveText('98개');
   await page.fill('input[type=search]', 'ㅂㅊㅍㄹㅅ');
-  await expect(page.locator('.list .li-title')).toHaveCount(4);
-  await expect(page.locator('.list .li-title', { hasText: /^벤치 프레스$/ })).toBeVisible();
+  await expect(page.locator('.list .li-title')).toHaveCount(7);
+  await expect(page.locator('.list .li-title', { hasText: /^바벨 벤치 프레스$/ })).toBeVisible();
+  // 다른 이름(검색용)으로도 찾음
+  await page.fill('input[type=search]', '펙덱');
+  await expect(page.locator('.list .li-title')).toHaveText(['머신 리어 델트 플라이', '머신 플라이']);
   for (const [tab, title] of [['기록', '기록'], ['내 몸', '내 몸'], ['설정', '설정']]) {
     await page.click(`#tabbar >> text=${tab}`);
     await expect(page.locator('h1')).toHaveText(title!);
@@ -52,9 +55,9 @@ test('루틴 만들기 → 운동 → 세트 체크(휴식 타이머) → 완료
   await page.fill('.title-input', '가슴날');
   await page.click('text=운동 추가');
   await sheet(page).locator('input[type=search]').fill('벤치');
-  await sheet(page).locator('.pick-item').filter({ has: page.locator('.pick-name', { hasText: /^벤치 프레스$/ }) }).click();
+  await sheet(page).locator('.pick-item').filter({ has: page.locator('.pick-name', { hasText: /^바벨 벤치 프레스$/ }) }).click();
   await sheet(page).locator('text=1개 추가').click();
-  await expect(page.locator('.ritem-name')).toHaveText(['벤치 프레스']);
+  await expect(page.locator('.ritem-name')).toHaveText(['바벨 벤치 프레스']);
   await page.click('.topbar >> text=저장');
   await expect(page.locator('.routine-card')).toContainText('가슴날');
 
@@ -124,7 +127,7 @@ test('백업 파일 불러오기(합치기)', async ({ page }) => {
   await (await chooser).setFiles({ name: 'b.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(v1)) });
   await sheet(page).locator('text=지금 기록에 합치기').click();
   await expect(page.locator('.toast.show')).toHaveText('불러왔어요');
-  await expect(page.locator('.card').nth(2)).toContainText('운동 기록 2개 · 루틴 1개 · 종목 55개');
+  await expect(page.locator('.card').nth(2)).toContainText('운동 기록 2개 · 루틴 1개 · 종목 99개');
 });
 
 test('잘못된 파일은 거부', async ({ page }) => {

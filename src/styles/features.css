@@ -159,3 +159,7 @@
 .group-sheet .pick-item { padding: 12px 8px; }
 .new-group { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
 .new-group .input { flex: 1; }
+
+/* 종목 상세: 옵션(바벨/스미스, 핀/플레이트) 고르기 */
+.opt-row { display: grid; gap: 6px; }
+.opt-row .ex-toggle { margin: 0; }

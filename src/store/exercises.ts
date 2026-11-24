@@ -1,5 +1,6 @@
 // 종목(운동) 관련 상태 변경
 import type { Exercise } from '@/domain/types';
+import { toggleForEquip } from '@/domain/catalog';
 import { uuid } from '@/lib/id';
 import { findById, patch, put, removeRecord, routines } from './core';
 import { removeImage } from './images';
@@ -8,6 +9,7 @@ export function blankExercise(preset: Partial<Exercise> = {}): Exercise {
   return {
     id: uuid(), name: '', part: '가슴', equip: '머신', kind: 'normal', rest: null, imageId: null,
     memo: '', memoAt: null, fav: false, pinned: [], seed: false, createdAt: Date.now(),
+    toggle: toggleForEquip(preset.equip ?? '머신'),
     ...preset,
   };
 }

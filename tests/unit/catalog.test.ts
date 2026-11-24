@@ -82,3 +82,52 @@ describe('백업 변환', () => {
     expect(cp).toMatchObject({ rest: 60, memo: 'm', fav: true, toggle: 'machine' });
   });
 });
+
+describe('운동 중 장비 토글', async () => {
+  const W = await import('@/domain/workout');
+  const { exerciseHistory } = await import('@/domain/history');
+  const { seedExercises } = await import('@/domain/seed');
+  const all = seedExercises(0);
+  const bench = all.find((e) => e.name === '바벨 벤치 프레스')!;
+  const dips = all.find((e) => e.name === '딥스')!;
+  const done = (id: string, start: number, items: Partial<import('@/domain/types').SessionItem>[]) => ({
+    id, name: 'x', routineId: null, startedAt: start, endedAt: start + 1, status: 'done' as const, bw: 80,
+    items: items.map((it) => ({ exerciseId: bench.id, name: '', part: '가슴', equip: '바벨', kind: 'normal' as const, sets: [{ w: 60, r: 10, t: 'N' as const, done: true }], ...it })),
+  });
+  const sessions = [
+    done('a', 100, [{ opt: '바벨', sets: [{ w: 100, r: 5, t: 'N', done: true }] }]),
+    done('b', 200, [{ opt: '스미스', sets: [{ w: 70, r: 8, t: 'N', done: true }] }]),
+  ];
+  it('새 기본 목록 98개, 토글·다른 이름 포함', () => {
+    expect(all.length).toBe(98);
+    expect(bench).toMatchObject({ id: 'seed-0', toggle: 'bar' });
+    expect(dips).toMatchObject({ toggle: 'body', kind: 'assist' });
+  });
+  it('기본 옵션 = 마지막에 쓴 옵션, 세트는 그 옵션의 지난 기록', () => {
+    const it0 = W.buildItem(bench, sessions, 3, 1000);
+    expect(it0).toMatchObject({ opt: '스미스', name: '스미스 벤치 프레스' });
+    expect(it0.sets[0]).toMatchObject({ w: 70, r: 8, done: false });
+    const it1 = W.buildItem(bench, sessions, 3, 1000, '바벨');
+    expect(it1).toMatchObject({ opt: '바벨', name: '바벨 벤치 프레스' });
+    expect(it1.sets[0]).toMatchObject({ w: 100, r: 5 });
+  });
+  it('토글을 바꾸면 이름이 바뀌고, 안 한 세트는 그 옵션 기록으로 다시 채움', () => {
+    const s = { ...done('c', 1000, []), status: 'active' as const, endedAt: null, items: [W.buildItem(bench, sessions, 3, 1000)] };
+    const s2 = W.setItemOption(s, 0, bench, '바벨', sessions);
+    expect(s2.items[0]).toMatchObject({ opt: '바벨', name: '바벨 벤치 프레스' });
+    expect(s2.items[0]!.sets[0]!.w).toBe(100);
+  });
+  it('맨몸 토글: 어시스트 ↔ 중량 = 무게 방식도 바뀜', () => {
+    const it0 = W.buildItem(dips, [], 3, 1000);
+    expect(it0).toMatchObject({ opt: '어시스트', kind: 'assist', name: '어시스트 딥스' });
+    const s = { ...done('d', 1000, []), status: 'active' as const, endedAt: null, items: [it0] };
+    expect(W.setItemOption(s, 0, dips, '중량', []).items[0]).toMatchObject({ opt: '중량', kind: 'bodyweight', name: '중량 딥스' });
+  });
+  it('기록은 옵션별로 따로 (옵션 없는 예전 기록 = 첫 옵션)', () => {
+    const old = done('o', 50, [{ sets: [{ w: 90, r: 5, t: 'N', done: true }] }]);
+    const all3 = [old, ...sessions];
+    expect(exerciseHistory(all3, bench.id, { opt: { toggle: 'bar', value: '바벨' } }).map((e) => e.sessionId)).toEqual(['o', 'a']);
+    expect(exerciseHistory(all3, bench.id, { opt: { toggle: 'bar', value: '스미스' } }).map((e) => e.sessionId)).toEqual(['b']);
+    expect(exerciseHistory(all3, bench.id).length).toBe(3);
+  });
+});

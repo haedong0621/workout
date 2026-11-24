@@ -1,12 +1,12 @@
 import type { ExerciseKind, SetType, Settings } from './types';
 
 export const PARTS = ['가슴', '등', '어깨', '팔', '하체', '복근', '유산소', '기타'] as const;
-export const EQUIPS = ['바벨', '덤벨', '머신', '케이블', '맨몸', '기타'] as const;
+export const EQUIPS = ['바벨', '덤벨', '이지바', '케이블', '머신', '맨몸', '기타'] as const;
 
 export const KINDS: Record<ExerciseKind, string> = { normal: '일반', assist: '어시스트', bodyweight: '체중+추가' };
 export const KIND_HELP: Record<ExerciseKind, string> = {
   normal: '입력한 무게 그대로 볼륨을 계산해요',
-  assist: '어시스트 머신: 핀 무게를 입력하면 (내 체중 − 핀 무게)로 볼륨을 계산해요',
+  assist: '어시스트: 도움받는 무게를 입력하면 (내 체중 − 무게)로 볼륨을 계산해요. 0kg = 맨몸',
   bodyweight: '풀업·딥스처럼 맨몸으로 하는 운동: (내 체중 + 추가 무게)로 볼륨을 계산해요',
 };
 

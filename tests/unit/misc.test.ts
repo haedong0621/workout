@@ -49,10 +49,11 @@ describe('형식', () => {
 });
 
 describe('기본 운동', () => {
-  it('54개, id 고정(seed-0..)', () => {
+  it('98개(카탈로그), id 고정(seed-0..)', () => {
     const ex = seedExercises(0);
-    expect(ex).toHaveLength(SEED.length);
-    expect(ex[0]).toMatchObject({ id: 'seed-0', name: '벤치 프레스' });
+    expect(ex).toHaveLength(98);
+    expect(SEED).toHaveLength(54);
+    expect(ex[0]).toMatchObject({ id: 'seed-0', name: '바벨 벤치 프레스' });
     expect(new Set(ex.map((e) => e.name)).size).toBe(ex.length);
   });
 });

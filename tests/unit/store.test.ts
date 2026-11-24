@@ -17,14 +17,14 @@ beforeEach(async () => {
 });
 
 describe('처음 실행', () => {
-  it('기본 운동 54개를 한 번만 넣음', async () => {
-    expect(store.exercises.value).toHaveLength(54);
+  it('기본 운동 98개를 한 번만 넣음', async () => {
+    expect(store.exercises.value).toHaveLength(98);
     expect(store.settings.value.seeded).toBe(true);
     await store.flush();
-    expect((await repo.loadAll()).exercises).toHaveLength(54);
+    expect((await repo.loadAll()).exercises).toHaveLength(98);
     // 다시 부팅해도 중복 없음
     await store.bootStore(async () => repo);
-    expect(store.exercises.value).toHaveLength(54);
+    expect(store.exercises.value).toHaveLength(98);
   });
   it('기본 운동을 다 지운 뒤 다시 열어도 다시 넣지 않음', async () => {
     for (const e of [...store.exercises.value]) store.exerciseActions.deleteExercise(e.id);
@@ -87,7 +87,9 @@ describe('종목', () => {
 describe('백업', () => {
   it('합치기: 같은 id는 덮어쓰고 설정 반영', async () => {
     await store.backupActions.importBackup(parseBackup(v1), 'merge');
-    expect(store.exercises.value).toHaveLength(55);
+    // 예전 백업은 새 기본 목록으로 옮겨져서 들어옴: 기본 98 + 직접 만든 1
+    expect(store.exercises.value).toHaveLength(99);
+    expect(store.exercises.value.find((e) => e.id === 'seed-0')).toMatchObject({ name: '바벨 벤치 프레스', toggle: 'bar' });
     expect(store.sessions.value.filter((s) => s.status === 'done')).toHaveLength(2);
     expect(store.settings.value.restDefault).toBe(75);
     expect((await repo.allImages())).toHaveLength(1);
@@ -107,7 +109,7 @@ describe('백업', () => {
     await store.backupActions.importBackup(parseBackup(v1), 'merge');
     await store.backupActions.wipeAll();
     expect(store.sessions.value).toHaveLength(0);
-    expect(store.exercises.value).toHaveLength(54);
+    expect(store.exercises.value).toHaveLength(98);
     expect(store.settings.value.restDefault).toBe(90);
   });
 });

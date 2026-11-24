@@ -1,4 +1,5 @@
 // 백업 파일(JSON) 형식. 버전 1(이전 앱)과 그대로 호환됩니다.
+import { convertToCatalog } from './convertCatalog.ts';
 import { clone } from '@/lib/clone';
 import { DEFAULT_SETTINGS } from './constants';
 import { CURRENT_SCHEMA, MIGRATIONS, migrate, type Migration, type RawData } from './migrations';
@@ -75,10 +76,14 @@ export function parseBackup(obj: unknown, migrations: readonly Migration[] = MIG
     settings: typeof src.settings === 'object' && src.settings ? { ...(src.settings as Record<string, unknown>) } : {},
   };
   const d: Record<string, unknown> = { ...src, ...(schema < target ? migrate(clone(raw), schema, migrations).data : raw) };
-  const exercises = normalizeList(d.exercises, normalizeExercise);
-  const routines = normalizeList(d.routines, normalizeRoutine);
+  let exercises = normalizeList(d.exercises, normalizeExercise);
+  let routines = normalizeList(d.routines, normalizeRoutine);
   // 진행 중이던 운동은 가져오지 않아요
-  const sessions = normalizeList(d.sessions, normalizeSession).filter((s) => s.status === 'done');
+  let sessions = normalizeList(d.sessions, normalizeSession).filter((s) => s.status === 'done');
+  // 예전(v2.6 이전) 기본 목록으로 만든 백업이면 새 기본 목록·이름 규칙으로 옮김
+  if (raw.exercises.some((e) => e.seed === true && !('toggle' in e))) {
+    ({ exercises, routines, sessions } = convertToCatalog({ exercises, routines, sessions }));
+  }
   const body = normalizeList(d.body, normalizeBody);
   const images = Array.isArray(d.images)
     ? d.images.filter((im): im is BackupImage => !!im && typeof im.id === 'string' && typeof im.data === 'string' && im.data.startsWith('data:'))

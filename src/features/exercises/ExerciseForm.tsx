@@ -1,4 +1,5 @@
 // 운동 만들기 / 수정 시트
+import { TOGGLE_OPTIONS, kindFor, toggleForEquip } from '@/domain/catalog';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { EQUIPS, KIND_HELP, KINDS, PARTS } from '@/domain/constants';
 import type { Exercise, ExerciseKind } from '@/domain/types';
@@ -60,14 +61,20 @@ function ExerciseFormBody({ preset, isEdit, close }: { preset: Exercise; isEdit:
   return (
     <div class="form">
       <div class="field-label">이름</div>
-      <input ref={nameRef} class="input" type="text" value={ex.name} placeholder="예: 케이블 플라이" enterKeyHint="done" onInput={(e) => set({ name: e.currentTarget.value })} />
+      <input ref={nameRef} class="input" type="text" value={ex.name} placeholder="장비 + 운동 이름 (예: 케이블 플라이)" enterKeyHint="done" onInput={(e) => set({ name: e.currentTarget.value })} />
       <div class="field-label">부위</div>
       <ChipRow options={PARTS} value={ex.part as (typeof PARTS)[number]} onChange={(part) => set({ part })} />
       <div class="field-label">장비</div>
-      <ChipRow options={EQUIPS} value={ex.equip as (typeof EQUIPS)[number]} onChange={(equip) => set({ equip })} variant="alt" />
-      <div class="field-label">무게 계산 방식</div>
-      <ChipRow options={KIND_KEYS} labels={KINDS} value={ex.kind} onChange={(kind) => set({ kind })} variant="alt" />
-      <div class="sub help">{KIND_HELP[ex.kind]}</div>
+      <ChipRow options={EQUIPS} value={ex.equip as (typeof EQUIPS)[number]} onChange={(equip) => { const toggle = toggleForEquip(equip); set({ equip, toggle, kind: toggle ? kindFor(toggle) : 'normal' }); }} variant="alt" />
+      {ex.toggle
+        ? <div class="sub help">운동 중에 {TOGGLE_OPTIONS[ex.toggle].join(' / ')} 중에서 골라요. 기록은 {ex.toggle === 'body' ? '체중 기준으로 한 줄로 이어져요 (0kg = 맨몸)' : '옵션별로 따로 쌓여요'}.</div>
+        : (
+          <>
+            <div class="field-label">무게 계산 방식</div>
+            <ChipRow options={KIND_KEYS} labels={KINDS} value={ex.kind} onChange={(kind) => set({ kind })} variant="alt" />
+            <div class="sub help">{KIND_HELP[ex.kind]}</div>
+          </>
+        )}
       <div class="field-label">휴식 시간(초) — 비워 두면 기본값</div>
       <input class="input" type="text" inputMode="numeric" value={restText} placeholder={`기본 ${settings.value.restDefault}`} onInput={(e) => setRestText(e.currentTarget.value)} />
       <div class="field-label">이미지 (사진 또는 움짤)</div>

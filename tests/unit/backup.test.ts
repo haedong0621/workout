@@ -6,11 +6,12 @@ import v1 from '../fixtures/v1-backup.json';
 describe('이전 앱(v1.0.6)이 만든 백업 파일', () => {
   const p = parseBackup(v1);
   it('모든 항목을 읽음', () => {
-    expect(p.counts).toEqual({ exercises: 55, routines: 1, sessions: 2, body: 2, images: 1 });
+    // 예전 기본 목록(54) + 직접 만든 1 → 새 기본 목록(98) + 직접 만든 1 로 옮겨짐
+    expect(p.counts).toEqual({ exercises: 99, routines: 1, sessions: 2, body: 2, images: 1 });
   });
   it('세부 값 유지', () => {
-    const bench = p.exercises.find((e) => e.name === '벤치 프레스')!;
-    expect(bench).toMatchObject({ id: 'seed-0', memo: '시트 4번', rest: 120, fav: true, pinned: ['s1'] });
+    const bench = p.exercises.find((e) => e.name === '바벨 벤치 프레스')!;
+    expect(bench).toMatchObject({ id: 'seed-0', memo: '시트 4번', rest: 120, fav: true, pinned: ['s1'], toggle: 'bar' });
     expect(bench.imageId).toBe(p.images[0]!.id);
     const s2 = p.sessions.find((s) => s.id === 's2')!;
     expect(s2.items[0]!.sets.map((x) => x.t)).toEqual(['W', 'N', 'D']);

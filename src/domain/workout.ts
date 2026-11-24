@@ -1,18 +1,49 @@
 // 운동(세션) 편집 로직 — 모두 "새 객체를 돌려주는" 순수 함수입니다.
 // 저장은 store 쪽에서 합니다. 그래서 여기 로직은 단위 테스트로 검증할 수 있어요.
 import { DEFAULT_REPS, DEFAULT_ROUTINE_EMOJI, DEFAULT_SET_COUNT } from './constants';
-import { exerciseHistory, prefillSets } from './history';
+import { exerciseHistory, lastUsedOption, prefillSets } from './history';
+import { TOGGLE_OPTIONS, kindFor, optionTitle } from './catalog.ts';
 import type { Exercise, Routine, Session, SessionItem, SetType, WorkoutSet } from './types';
 import { timeOfDayName } from '@/lib/format';
 
 export const newSet = (w = 0, r = DEFAULT_REPS, t: SetType = 'N'): WorkoutSet => ({ w, r, t, done: false });
 
-/** 종목을 세션 항목으로. 지난 기록이 있으면 그 세트를 그대로 불러와요. */
-export function buildItem(ex: Exercise, sessions: readonly Session[], setCount = DEFAULT_SET_COUNT, beforeTs = Infinity): SessionItem {
-  const hist = exerciseHistory(sessions, ex.id, { before: beforeTs });
+/** 토글 운동의 옵션 정하기: 정해 준 값 → 마지막에 쓴 옵션 → 첫 옵션 */
+export function pickOption(ex: Pick<Exercise, 'id' | 'toggle'>, sessions: readonly Session[], wanted?: string, beforeTs = Infinity): string | undefined {
+  if (!ex.toggle) return undefined;
+  const allowed = TOGGLE_OPTIONS[ex.toggle];
+  for (const o of [wanted, lastUsedOption(sessions, ex.id, beforeTs)]) if (o && allowed.includes(o)) return o;
+  return allowed[0];
+}
+
+/** 옵션에 맞춘 항목 이름·무게 방식 */
+function withOption(ex: Exercise, opt: string | undefined): Pick<SessionItem, 'name' | 'kind' | 'opt'> {
+  return {
+    name: optionTitle(ex.name, ex.toggle, opt),
+    kind: ex.toggle === 'body' ? kindFor('body', opt) : ex.kind,
+    ...(opt ? { opt } : {}),
+  };
+}
+
+/** 종목을 세션 항목으로. 지난 기록(같은 옵션)이 있으면 그 세트를 그대로 불러와요. */
+export function buildItem(ex: Exercise, sessions: readonly Session[], setCount = DEFAULT_SET_COUNT, beforeTs = Infinity, wantedOpt?: string): SessionItem {
+  const opt = pickOption(ex, sessions, wantedOpt, beforeTs);
+  const hist = exerciseHistory(sessions, ex.id, { before: beforeTs, opt: { toggle: ex.toggle, value: opt } });
   const last = hist[hist.length - 1];
   const sets = last ? prefillSets(last) : Array.from({ length: Math.max(1, setCount || DEFAULT_SET_COUNT) }, () => newSet());
-  return { exerciseId: ex.id, name: ex.name, part: ex.part, equip: ex.equip, kind: ex.kind, sets };
+  return { exerciseId: ex.id, part: ex.part, equip: ex.equip, ...withOption(ex, opt), sets };
+}
+
+/** 운동 중 토글 바꾸기. 아직 끝낸 세트가 없으면 그 옵션의 지난 기록으로 세트를 다시 채움 */
+export function setItemOption(s: Session, idx: number, ex: Exercise, opt: string, sessions: readonly Session[]): Session {
+  return updateItem(s, idx, (it) => {
+    if (it.opt === opt || !ex.toggle || !TOGGLE_OPTIONS[ex.toggle].includes(opt)) return it;
+    const next = { ...it, ...withOption(ex, opt) };
+    if (ex.toggle === 'body' || it.sets.some((x) => x.done)) return next;
+    const hist = exerciseHistory(sessions, ex.id, { before: s.startedAt, excludeId: s.id, opt: { toggle: ex.toggle, value: opt } });
+    const last = hist[hist.length - 1];
+    return last ? { ...next, sets: prefillSets(last) } : next;
+  });
 }
 
 export interface CreateSessionInput {
@@ -30,7 +61,7 @@ export function createSession({ id, now, bw, routine, exercises, sessions }: Cre
   if (routine) {
     for (const it of routine.items) {
       const ex = byId.get(it.exerciseId);
-      if (ex) items.push(buildItem(ex, sessions, it.setCount, now));
+      if (ex) items.push(buildItem(ex, sessions, it.setCount, now, it.opt));
     }
   }
   return {
@@ -129,6 +160,6 @@ export function shiftStart(s: Session, newStart: number): Session {
 export function routineFromSession(s: Session, name: string, id: string, now: number): Routine {
   return {
     id, name: name || s.name, emoji: DEFAULT_ROUTINE_EMOJI, imageId: null, createdAt: now,
-    items: s.items.map((it) => ({ exerciseId: it.exerciseId, setCount: Math.max(1, it.sets.length) })),
+    items: s.items.map((it) => ({ exerciseId: it.exerciseId, setCount: Math.max(1, it.sets.length), ...(it.opt ? { opt: it.opt } : {}) })),
   };
 }

@@ -20,3 +20,8 @@ export function matchName(name: string, q: string): boolean {
   if (/^[ㄱ-ㅎ]+$/.test(query)) return choseong(n).includes(query);
   return false;
 }
+
+/** 운동 이름 또는 다른 이름(aka)으로 찾기 */
+export function matchExercise(ex: { name: string; aka?: string[] }, q: string): boolean {
+  return matchName(ex.name, q) || (ex.aka ?? []).some((a) => matchName(a, q));
+}

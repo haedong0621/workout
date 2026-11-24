@@ -34,7 +34,7 @@ async function touchDrag(page: Page, from: { x: number; y: number }, to: { x: nu
 }
 
 test('루틴 편집: 마우스로 꾹 눌러 끌면 순서가 바뀜', async ({ page }) => {
-  await routineWith(page, ['벤치 프레스', '스쿼트', '데드리프트']);
+  await routineWith(page, ['바벨 벤치 프레스', '바벨 스쿼트', '바벨 데드리프트']);
   const first = await page.locator('.ritem').nth(0).boundingBox();
   const third = await page.locator('.ritem').nth(2).boundingBox();
   await page.mouse.move(first!.x + 60, first!.y + 20);
@@ -43,11 +43,11 @@ test('루틴 편집: 마우스로 꾹 눌러 끌면 순서가 바뀜', async ({ 
   await expect(page.locator('.ritem.sort-lifted')).toHaveCount(1);
   await page.mouse.move(first!.x + 60, third!.y + third!.height - 5, { steps: 10 });
   await page.mouse.up();
-  await expect(page.locator('.ritem-name')).toHaveText(['스쿼트', '데드리프트', '벤치 프레스']);
+  await expect(page.locator('.ritem-name')).toHaveText(['바벨 스쿼트', '바벨 데드리프트', '바벨 벤치 프레스']);
 });
 
 test('루틴 편집: 짧게 누르고 움직이면 끌리지 않음', async ({ page }) => {
-  await routineWith(page, ['벤치 프레스', '스쿼트']);
+  await routineWith(page, ['바벨 벤치 프레스', '바벨 스쿼트']);
   const first = await page.locator('.ritem').nth(0).boundingBox();
   await page.mouse.move(first!.x + 60, first!.y + 20);
   await page.mouse.down();
@@ -56,22 +56,22 @@ test('루틴 편집: 짧게 누르고 움직이면 끌리지 않음', async ({ p
   await page.waitForTimeout(500);
   await page.mouse.up();
   await expect(page.locator('.ritem.sort-lifted')).toHaveCount(0);
-  await expect(page.locator('.ritem-name')).toHaveText(['벤치 프레스', '스쿼트']);
+  await expect(page.locator('.ritem-name')).toHaveText(['바벨 벤치 프레스', '바벨 스쿼트']);
 });
 
 test('운동 중: 터치로 꾹 눌러 카드 순서 바꾸기, 놓을 때 세트 편집이 열리지 않음', async ({ page }) => {
-  await routineWith(page, ['벤치 프레스', '스쿼트']);
+  await routineWith(page, ['바벨 벤치 프레스', '바벨 스쿼트']);
   await page.click('.topbar >> text=저장');
   await page.click('.routine-card');
   await sheet(page).locator('text=운동 시작').click();
-  await expect(page.locator('.ex-card .ex-name')).toHaveText(['벤치 프레스', '스쿼트']);
+  await expect(page.locator('.ex-card .ex-name')).toHaveText(['바벨 벤치 프레스', '바벨 스쿼트']);
   await expect(page.locator('.sheet')).toHaveCount(0);
   const a = await page.locator('.ex-card').nth(0).boundingBox();
   const b = await page.locator('.ex-card').nth(1).boundingBox();
   // 세트 칸 위에서 꾹 누름 → 끌기 (놓은 뒤 세트 편집 시트가 열리면 안 됨)
   const cell = await page.locator('.ex-card').nth(0).locator('.set-row .cell').first().boundingBox();
   await touchDrag(page, { x: cell!.x + 20, y: cell!.y + 20 }, { x: cell!.x + 20, y: b!.y + b!.height - 10 + (cell!.y - a!.y) - 40 });
-  await expect(page.locator('.ex-card .ex-name')).toHaveText(['스쿼트', '벤치 프레스']);
+  await expect(page.locator('.ex-card .ex-name')).toHaveText(['바벨 스쿼트', '바벨 벤치 프레스']);
   await page.waitForTimeout(400);
   await expect(page.locator('.sheet.open')).toHaveCount(0);
   // 짧게 탭하면 세트 편집이 그대로 열림

@@ -1,5 +1,6 @@
 // 운동 진행 화면의 종목 카드 하나
 import { SET_TYPE_KEYS, SET_TYPES } from '@/domain/constants';
+import { TOGGLE_OPTIONS, optionTitle } from '@/domain/catalog';
 import { exerciseHistory, pinnedFirst, prefillSets, previousEntry } from '@/domain/history';
 import type { Session, SessionItem, WorkoutSet } from '@/domain/types';
 import { effWeight, itemStats, plannedVolume } from '@/domain/volume';
@@ -9,7 +10,7 @@ import { unlockAudio } from '@/services/sound';
 import { startRest, stopRest } from '@/services/restTimer';
 import { exerciseMap, includeWarmup, restFor, sessions, settings, workoutActions } from '@/store';
 import { go, paths } from '@/app/router';
-import { DiffBadge, EmptyState } from '@/ui/controls';
+import { DiffBadge, EmptyState, Segmented } from '@/ui/controls';
 import { choiceSheet, confirmSheet } from '@/ui/dialogs';
 import { Icon } from '@/ui/Icon';
 import { openSheet } from '@/ui/sheet';
@@ -28,7 +29,8 @@ export function ExerciseCard({ session: s, item: it, idx, sort }: { session: Ses
   const ex = exerciseMap.value.get(it.exerciseId);
   const inc = includeWarmup.value;
   const st = itemStats(it, s.bw, inc);
-  const prev = previousEntry(sessions.value, s, it.exerciseId, inc);
+  const prev = previousEntry(sessions.value, s, it.exerciseId, inc, { toggle: ex?.toggle, value: it.opt });
+  const opts = ex?.toggle ? TOGGLE_OPTIONS[ex.toggle] : null;
   const allDone = it.sets.length > 0 && it.sets.every((x) => x.done);
   const thumbSrc = ex ?? { id: it.exerciseId, imageId: null, part: it.part, equip: it.equip };
 
@@ -37,7 +39,7 @@ export function ExerciseCard({ session: s, item: it, idx, sort }: { session: Ses
       <div class="ex-head">
         <ExThumb ex={thumbSrc} size={48} />
         <div class="grow">
-          <div class="ex-name">{ex?.name ?? it.name}</div>
+          <div class="ex-name">{ex ? optionTitle(ex.name, ex.toggle, it.opt) : it.name}</div>
           <div class="vol">
             {st.setCount
               ? <><b>{fmtNum(st.volume, 0)} kg</b>{prev && <DiffBadge delta={st.volume - prev.volume} muted={!allDone} />}</>
@@ -47,6 +49,11 @@ export function ExerciseCard({ session: s, item: it, idx, sort }: { session: Ses
         </div>
         <button class="icon-btn" type="button" onClick={() => exerciseMenu(s, idx)} aria-label="운동 메뉴"><Icon name="more" /></button>
       </div>
+      {opts && (
+        <div class="ex-toggle">
+          <Segmented options={opts.map((o) => [o, o] as [string, string])} value={it.opt ?? opts[0]} onChange={(o) => workoutActions.setItemOption(s.id, idx, o)} />
+        </div>
+      )}
       {ex && (
         <button class={'memo-line' + (ex.memo ? '' : ' blank')} type="button" onClick={() => editMemoFlow(ex.id)}>
           <Icon name="note" size={14} />
@@ -56,7 +63,7 @@ export function ExerciseCard({ session: s, item: it, idx, sort }: { session: Ses
         </button>
       )}
       <div class="set-head">
-        <span>세트</span><span>{it.kind === 'assist' ? '핀(kg)' : it.kind === 'bodyweight' ? '추가(kg)' : 'kg'}</span><span>횟수</span><span />
+        <span>세트</span><span>{it.kind === 'assist' ? '어시스트(kg)' : it.kind === 'bodyweight' ? '추가(kg)' : 'kg'}</span><span>횟수</span><span />
       </div>
       <div class="sets">
         {it.sets.map((set, si) => <SetRow key={si} s={s} it={it} set={set} idx={idx} si={si} />)}
@@ -151,7 +158,7 @@ function loadHistorySheet(s: Session, idx: number): Promise<void> {
   const it = s.items[idx];
   if (!it) return Promise.resolve();
   const ex = exerciseMap.value.get(it.exerciseId);
-  const hist = pinnedFirst(exerciseHistory(sessions.value, it.exerciseId, { before: s.startedAt, excludeId: s.id, includeWarmup: includeWarmup.value }).reverse(), ex?.pinned ?? []);
+  const hist = pinnedFirst(exerciseHistory(sessions.value, it.exerciseId, { before: s.startedAt, excludeId: s.id, includeWarmup: includeWarmup.value, opt: { toggle: ex?.toggle, value: it.opt } }).reverse(), ex?.pinned ?? []);
   const pinned = new Set(ex?.pinned ?? []);
   return openSheet<void>({
     title: '지난 기록 불러오기',
