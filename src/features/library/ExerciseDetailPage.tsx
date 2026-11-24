@@ -77,7 +77,7 @@ export function ExerciseDetailPage({ params }: RouteProps) {
           {!ex.toggle && ex.kind === 'assist' && <span class="tag accent">어시스트</span>}
           {!ex.toggle && ex.kind === 'bodyweight' && <span class="tag accent">체중+추가</span>}
         </div>
-        {!ex.imageId && <div class="sub">이미지를 눌러 사진·움짤로 바꿀 수 있어요</div>}
+        {!ex.seed && !ex.imageId && <div class="sub">이미지를 눌러 사진·움짤로 바꿀 수 있어요</div>}
       </div>
 
       <div class="action-row">

@@ -27,4 +27,5 @@ test('기본 운동 수정 화면에는 사진 선택이 없음', async ({ page 
   await page.goto('/#/exercise/seed-5');
   await expect(page.locator('.hero-img .ex-art')).toBeVisible();
   await expect(page.locator('button.hero-img')).toHaveCount(0);
+  await expect(page.locator('.hero', { hasText: '사진·움짤로 바꿀 수 있어요' })).toHaveCount(0);
 });
