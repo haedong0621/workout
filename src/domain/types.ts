@@ -3,6 +3,8 @@
 //    바꿔야 하면 src/domain/migrations.ts 에 변환 단계를 추가하세요.
 
 export type ExerciseKind = 'normal' | 'assist' | 'bodyweight';
+/** 장비 토글 종류: bar = 바벨·스미스, machine = 핀·플레이트, body = 어시스트·중량 (domain/catalog.ts) */
+export type ExerciseToggle = 'bar' | 'machine' | 'body';
 export type SetType = 'N' | 'W' | 'F' | 'D';
 
 export interface Exercise {
@@ -22,12 +24,18 @@ export interface Exercise {
   pinned: string[];
   /** 기본 제공 운동인지 */
   seed: boolean;
+  /** 장비 토글 종류 (없으면 토글 없음) */
+  toggle?: ExerciseToggle | null;
+  /** 다른 이름 — 검색용 */
+  aka?: string[];
   createdAt: number;
 }
 
 export interface RoutineItem {
   exerciseId: string;
   setCount: number;
+  /** 이 루틴에서 쓸 토글 옵션 (없으면 마지막에 쓴 옵션) */
+  opt?: string;
 }
 
 export interface Routine {
@@ -65,6 +73,8 @@ export interface SessionItem {
   part: string;
   equip: string;
   kind: ExerciseKind;
+  /** 고른 토글 옵션 (바벨/스미스, 핀/플레이트, 어시스트/중량) — 기록은 옵션별로 따로 */
+  opt?: string;
   sets: WorkoutSet[];
 }
 
