@@ -1,9 +1,9 @@
 // 운동 진행 화면
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { setProgress, sessionStats } from '@/domain/volume';
 import type { Session } from '@/domain/types';
 import { fmtDur, fmtNum } from '@/lib/format';
-import { activeSession, exerciseMap, includeWarmup, workoutActions } from '@/store';
+import { activeSession, exerciseMap, findById, includeWarmup, routineActions, workoutActions } from '@/store';
 import { go, paths } from '@/app/router';
 import { EmptyState } from '@/ui/controls';
 import { Elapsed } from '@/ui/Clock';
@@ -18,7 +18,7 @@ import { RestBar } from './RestBar';
 import { useSwipePager } from './useSwipePager';
 import { createPortal } from 'preact/compat';
 import { useSortable } from '@/ui/sortable';
-import { moveItem } from '@/domain/workout';
+import { applyRoutineDiff, moveItem, routineDiff } from '@/domain/workout';
 
 /** 운동 페이지 넘기기: 운동 하나 = 한 화면, 좌우로 밀기. 마지막 세트 체크 → 1초 뒤 다음 운동 */
 const AUTO_NEXT_MS = 1000;
@@ -39,6 +39,7 @@ export function WorkoutPage() {
     if (view && view.scrollTop > 0) view.scrollTo({ top: 0, behavior: 'smooth' });
   };
   const pager = useSwipePager(pages, Math.min(page, pages - 1), goTo);
+  useCardHeight(pager.viewRef);
   // 마지막 세트를 체크해 운동이 끝나면 1초 뒤 다음 운동으로
   useEffect(() => {
     if (!s) return;
@@ -91,8 +92,10 @@ export function WorkoutPage() {
           {s.items.map((it, idx) => <div class="ex-page" key={it.exerciseId + ':' + idx}><ExerciseCard session={s} item={it} idx={idx} /></div>)}
           <div class="ex-page add-page">
             <div class="ex-card add-card">
-              {!s.items.length && <EmptyState small title="운동이 없어요" sub="아래 버튼으로 운동을 추가하세요" />}
-              <button class="btn soft wide" type="button" onClick={() => addExercises(s)}><Icon name="plus" size={18} /> 운동 추가</button>
+              <div class="add-plus"><Icon name="plus" size={30} /></div>
+              <div class="add-title">{s.items.length ? '운동 더 하기' : '운동이 없어요'}</div>
+              <div class="sub">{s.items.length ? '다른 운동을 이어서 할 수 있어요' : '아래 버튼으로 운동을 추가하세요'}</div>
+              <button class="btn soft add-btn" type="button" onClick={() => addExercises(s)}><Icon name="plus" size={18} /> 운동 추가</button>
             </div>
           </div>
         </div>
@@ -137,9 +140,11 @@ async function moreMenu(s: Session) {
 
 function FinishBody({ s, close }: { s: Session; close: CloseFn<string> }) {
   const [name, setName] = useState(s.name);
-  const { done, total } = setProgress(s);
+  const { done } = setProgress(s);
   const st = sessionStats(s, includeWarmup.value);
-  const undone = total - done;
+  const started = s.items.filter((it) => it.sets.some((x) => x.done));
+  const undone = started.reduce((n, it) => n + it.sets.filter((x) => !x.done).length, 0);
+  const skipped = s.items.length - started.length;
   return (
     <div>
       <div class="field-label">운동 이름</div>
@@ -149,7 +154,14 @@ function FinishBody({ s, close }: { s: Session; close: CloseFn<string> }) {
         <div><div class="sum-num">{done}</div><div class="sub">완료 세트</div></div>
         <div><div class="sum-num">{fmtNum(st.volume, 0)}</div><div class="sub">총 볼륨 (kg)</div></div>
       </div>
-      {undone > 0 && <div class="banner warn static">체크하지 않은 {undone}세트는 기록에서 빠져요</div>}
+      {(undone > 0 || skipped > 0) && (
+        <div class="banner warn static">
+          <div>
+            {undone > 0 && <div>체크하지 않은 {undone}세트는 기록에서 빠져요</div>}
+            {skipped > 0 && <div>하나도 안 한 운동 {skipped}개는 "미실시"로 남아요</div>}
+          </div>
+        </div>
+      )}
       <div class="btn-row">
         <button class="btn ghost" type="button" onClick={() => close(undefined)}>계속하기</button>
         <button class="btn primary" type="button" onClick={() => close(name)}>저장하고 종료</button>
@@ -167,8 +179,49 @@ async function finishFlow(s: Session) {
   const name = await openSheet<string>({ title: '운동을 마칠까요?', render: (close) => <FinishBody s={activeSession.value ?? s} close={close} /> });
   if (name === undefined) return;
   const done = workoutActions.finishWorkout(s.id, name);
-  toast('캘린더에 기록했어요');
-  if (done) go(paths.session(done.id), { replace: true });
+  if (!done) return;
+  go(paths.session(done.id), { replace: true }); // 기록 화면으로 옮긴 뒤 물어봄
+  const changed = await askRoutineUpdate(done);
+  toast(changed ? '기록하고 루틴도 바꿨어요' : '캘린더에 기록했어요');
+}
+
+/** 저장한 루틴으로 운동했는데 운동을 추가·삭제(교체 포함)했으면 루틴에도 반영할지 물어봄. 대체 운동·미실시는 묻지 않음 */
+async function askRoutineUpdate(done: Session): Promise<boolean> {
+  const r = done.routineId ? findById('routines', done.routineId) : undefined;
+  if (!r) return false;
+  const diff = routineDiff(r, done);
+  if (!diff.added.length && !diff.removed.length) return false;
+  const nameOf = (id: string) => exerciseMap.value.get(id)?.name ?? '지워진 운동';
+  const lines = [
+    `"${r.name}" 루틴과 달라진 운동이 있어요.`,
+    ...diff.added.map((it) => `+ ${it.name} (추가)`),
+    ...diff.removed.map((x) => `− ${nameOf(x.exerciseId)} (뺌)`),
+    '대체 운동·미실시 운동은 반영하지 않아요.',
+  ];
+  const ok = await confirmSheet({ title: '루틴에도 반영할까요?', message: lines.join('\n'), ok: '루틴에 반영', cancel: '그대로 두기' });
+  if (ok) routineActions.saveRoutine(applyRoutineDiff(r, done, diff));
+  return ok;
+}
+
+/** 카드 높이 = 화면에 맞춤(모든 카드 같은 높이 → 넘길 때 꿀렁거리지 않음). 휴식 바 자리는 항상 비워 둠 */
+const REST_SLOT = 14 + 66 + 10; // 하단 바 위 간격 + 휴식 바 높이 + 여유 (.restbar bottom 과 맞춤)
+const MIN_CARD_H = 320;
+function useCardHeight(viewRef: { current: HTMLDivElement | null }) {
+  useLayoutEffect(() => {
+    const fit = () => {
+      const v = viewRef.current;
+      const bb = document.querySelector('.bottombar');
+      if (!v || !bb) return;
+      const view = v.closest('#view');
+      const top = v.getBoundingClientRect().top + (view?.scrollTop ?? 0);
+      const h = Math.max(MIN_CARD_H, Math.floor(bb.getBoundingClientRect().top - REST_SLOT - top));
+      v.style.setProperty('--card-h', h + 'px');
+    };
+    fit();
+    const raf = requestAnimationFrame(fit); // 하단 바(portal)가 붙은 뒤 한 번 더
+    window.addEventListener('resize', fit);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', fit); };
+  }, []);
 }
 
 function firstUndone(s: Session): number {

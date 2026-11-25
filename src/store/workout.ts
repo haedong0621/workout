@@ -1,6 +1,6 @@
 // 진행 중인 운동(세션) 관련 상태 변경
 import { latestBodyWeight } from '@/domain/body';
-import type { Exercise, Session, WorkoutSet } from '@/domain/types';
+import type { Exercise, Session, SetType, WorkoutSet } from '@/domain/types';
 import * as W from '@/domain/workout';
 import { dateKey } from '@/lib/format';
 import { uuid } from '@/lib/id';
@@ -42,6 +42,23 @@ export function swapExercise(sessionId: string, idx: number, ex: Exercise): void
     return W.replaceItem(s, idx, W.buildItem(ex, sessions.value, cur?.sets.length ?? 3, s.startedAt));
   });
 }
+
+/** 대체 운동: 오늘만 다른 운동으로 (원래 운동은 기록에 "○○ 대신"으로 남음, 루틴은 그대로) */
+export function substituteExercise(sessionId: string, idx: number, ex: Exercise): void {
+  updateSession(sessionId, (s) => W.substituteItem(s, idx, ex, sessions.value));
+}
+
+/** 대체 취소 → 원래 운동으로 */
+export function revertSubstitute(sessionId: string, idx: number): void {
+  updateSession(sessionId, (s) => {
+    const orig = s.items[idx]?.sub;
+    const ex = orig ? exercises.value.find((e) => e.id === orig.exerciseId) : undefined;
+    return ex ? W.revertSubstitute(s, idx, ex, sessions.value) : s;
+  });
+}
+
+export const setSetType = (id: string, idx: number, si: number, t: SetType) => updateSession(id, (s) => W.setSetType(s, idx, si, t));
+export const removeSet = (id: string, idx: number, si: number) => updateSession(id, (s) => W.removeSet(s, idx, si));
 
 /** 운동 중 장비 토글 바꾸기 (바벨/스미스, 핀/플레이트, 어시스트/중량) */
 export function setItemOption(sessionId: string, idx: number, opt: string): void {

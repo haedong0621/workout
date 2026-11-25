@@ -30,21 +30,10 @@ export function useSwipePager(count: number, page: number, onChange: (i: number)
     st.current.first = false;
   }, [page, count]);
 
-  // 상자 높이 = 지금 카드 높이 (옆 카드가 길어도 아래가 비지 않게). 세트 추가 등으로 바뀌면 따라감
-  useEffect(() => {
-    const v = viewRef.current, cur = trackRef.current?.children[page] as HTMLElement | undefined;
-    if (!v || !cur) return;
-    const fit = () => { v.style.height = cur.offsetHeight + 'px'; };
-    fit();
-    const ro = new ResizeObserver(fit);
-    ro.observe(cur);
-    return () => ro.disconnect();
-  }, [page, count]);
-
   useEffect(() => {
     const v = viewRef.current;
     if (!v) return;
-    let x0 = 0, y0 = 0, dx = 0, axis: 'x' | 'y' | null = null, active = false, dragged = false;
+    let x0 = 0, y0 = 0, dx = 0, axis: 'x' | 'y' | null = null, active = false, dragged = false, blockUntil = 0;
     let samples: { t: number; x: number }[] = [];
     const onResize = () => place(st.current.page);
 
@@ -75,6 +64,7 @@ export function useSwipePager(count: number, page: number, onChange: (i: number)
     const end = (e: TouchEvent) => {
       if (!active) return;
       active = false;
+      if (dragged) blockUntil = performance.now() + 400;
       if (axis !== 'x') return;
       const { page: pg, count: n, onChange: go } = st.current;
       const last = samples[samples.length - 1], old = samples.find((s) => e.timeStamp - s.t < 120) ?? samples[0];
@@ -87,7 +77,7 @@ export function useSwipePager(count: number, page: number, onChange: (i: number)
       else go(to);
     };
     // 민 손가락을 뗄 때 버튼이 눌리지 않게
-    const click = (e: MouseEvent) => { if (dragged) { e.stopPropagation(); e.preventDefault(); dragged = false; } };
+    const click = (e: MouseEvent) => { if (performance.now() < blockUntil) { e.stopPropagation(); e.preventDefault(); blockUntil = 0; } };
 
     v.addEventListener('touchstart', start, { passive: true });
     v.addEventListener('touchmove', move, { passive: false });

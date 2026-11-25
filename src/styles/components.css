@@ -115,7 +115,7 @@ textarea.input { resize: none; line-height: 1.5; }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 12px 6px 18px; flex: none; }
 .sheet-title { font-weight: 800; font-size: 18px; }
 .sheet-body { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 16px 18px; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
-.sheet-msg { color: #4a525d; margin: 4px 0 0; }
+.sheet-msg { color: #4a525d; margin: 4px 0 0; white-space: pre-line; }
 .sheet-foot { padding: 10px 16px; border-top: 1px solid var(--line); flex: none; }
 .sheet-foot.static { position: sticky; bottom: -18px; margin: 18px -16px -18px; background: var(--card); }
 .menu { display: flex; flex-direction: column; }

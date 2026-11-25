@@ -74,13 +74,14 @@ function SetEditorBody({ sessionId, itemIndex, setIndex, close }: { sessionId: s
       </div>
       <div class="chips">
         {SET_TYPE_KEYS.map((k) => (
-          <button key={k} class={'chip' + (st.t === k ? ' active' : '')} type="button" onClick={() => patch({ t: k })}>{k === 'N' ? '일반' : `${k} ${SET_TYPES[k]}`}</button>
+          <button key={k} class={'chip' + (st.t === k ? ' active' : '')} type="button" onClick={() => workoutActions.setSetType(sessionId, itemIndex, si, k)}>{k === 'N' ? '일반' : `${k} ${SET_TYPES[k]}`}</button>
         ))}
       </div>
       <div class="seted-cols" key={si}>
         <NumField label={weightLabel} value={st.w} decimals steps={[-5, -2.5, -1, 1, 2.5, 5]} onChange={(w) => patch({ w })} />
         <NumField label="횟수" value={st.r} decimals={false} steps={[-5, -1, 1, 5]} onChange={(r) => patch({ r })} />
       </div>
+      {st.t === 'F' && st.goal != null && <div class="seted-hint">실패 세트 · 목표 {st.goal}회 → 실제로 한 횟수를 입력하세요</div>}
       <div class="seted-hint">{hint}</div>
       <div class="btn-row">
         <button class="btn ghost" type="button" onClick={() => { workoutActions.updateSession(sessionId, (x) => W.applySetToAll(x, itemIndex, si)); toast('모든 세트에 적용했어요'); }}>모든 세트에 적용</button>

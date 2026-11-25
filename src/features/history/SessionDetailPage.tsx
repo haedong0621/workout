@@ -40,11 +40,21 @@ export function SessionDetailPage({ params }: RouteProps) {
       {s.bw > 0 && <div class="sub pad">계산에 사용한 체중 {fmtNum(s.bw)}kg</div>}
       {s.items.map((it, idx) => {
         const ist = itemStats(it, s.bw, inc);
+        const subOf = it.sub && <span class="sub"> · {it.sub.name} 대신</span>;
+        if (it.skipped) {
+          return (
+            <Card key={idx} class="ex-sum skipped"
+              title={<div><div class="card-title">{it.name}</div><div class="sub">{it.part} · {it.equip}{subOf}</div></div>}
+              right={<span class="tag">미실시</span>}>
+              <div class="sub">{it.planned ? `계획 ${it.planned}세트 · ` : ''}하지 않음</div>
+            </Card>
+          );
+        }
         if (!ist.setCount) return null;
         const prev = previousEntry(sessions.value, s, it.exerciseId, inc, { toggle: exerciseMap.value.get(it.exerciseId)?.toggle, value: it.opt });
         return (
           <Card key={idx} class="ex-sum"
-            title={<div><div class="card-title">{it.name}</div><div class="sub">{it.part} · {it.equip}</div></div>}
+            title={<div><div class="card-title">{it.name}{it.sub && <span class="tag sub-tag">대체</span>}</div><div class="sub">{it.part} · {it.equip}{subOf}</div></div>}
             right={<div class="right"><b>{fmtNum(ist.volume, 0)} kg</b>{prev && <DiffBadge delta={ist.volume - prev.volume} />}</div>}>
             <SetChips big sets={it.sets} onPick={(si) => void openSetEditor(s.id, idx, si)} />
           </Card>

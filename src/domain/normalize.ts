@@ -67,6 +67,7 @@ export function normalizeSet(v: unknown): WorkoutSet | null {
     r: Math.max(0, toNum(v.r, 0)),
     t: SET_TYPES.includes(v.t as SetType) ? (v.t as SetType) : 'N',
     done: !!v.done,
+    goal: Number.isFinite(Number(v.goal)) && v.goal != null && v.goal !== '' ? Math.max(0, Number(v.goal)) : undefined,
   };
 }
 
@@ -82,6 +83,9 @@ export function normalizeSessionItem(v: unknown): SessionItem | null {
     kind: kindOf(v.kind),
     ...(typeof v.opt === 'string' && v.opt ? { opt: v.opt } : { opt: undefined }),
     sets,
+    sub: isObj(v.sub) && v.sub.exerciseId ? { exerciseId: str(v.sub.exerciseId), name: str(v.sub.name, '이름 없음'), ...(typeof v.sub.opt === 'string' && v.sub.opt ? { opt: v.sub.opt } : {}) } : undefined,
+    skipped: v.skipped ? true : undefined,
+    planned: v.skipped && Number.isFinite(Number(v.planned)) ? Math.max(0, Math.round(Number(v.planned))) : undefined,
   };
 }
 

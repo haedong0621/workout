@@ -66,6 +66,8 @@ export interface WorkoutSet {
   r: number;
   t: SetType;
   done: boolean;
+  /** 실패(F) 세트: 원래 하려던 횟수 (실패로 바꾼 순간의 횟수) */
+  goal?: number;
 }
 
 /** 운동 기록 안의 종목. 이름·부위 등은 기록한 시점 값으로 복사해 둡니다. */
@@ -78,6 +80,18 @@ export interface SessionItem {
   /** 고른 토글 옵션 (바벨/스미스, 핀/플레이트, 어시스트/중량) — 기록은 옵션별로 따로 */
   opt?: string;
   sets: WorkoutSet[];
+  /** 대체 운동: 원래 하려던(루틴의) 운동. 오늘만 이 운동으로 대신함 */
+  sub?: SubstituteOf;
+  /** 미실시: 운동을 마칠 때 세트를 하나도 안 한 운동 (sets는 비어 있음) */
+  skipped?: boolean;
+  /** 미실시일 때 계획했던 세트 수 */
+  planned?: number;
+}
+
+export interface SubstituteOf {
+  exerciseId: string;
+  name: string;
+  opt?: string;
 }
 
 export type SessionStatus = 'active' | 'done';

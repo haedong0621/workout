@@ -25,7 +25,7 @@
 .wk-title { flex: 1; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0; min-width: 0; }
 .wk-name { font-weight: 700; font-size: 15px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .clock { font-size: 26px; font-weight: 800; color: var(--accent); letter-spacing: 0.01em; }
-.page.workout { padding-bottom: 210px; }
+.page.workout { padding-bottom: 0; }
 .ex-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
 /* 운동 넘기기: 운동 하나 = 한 화면, 좌우로 밀기 (useSwipePager가 track을 움직임, 다음 카드가 오른쪽에 살짝 보임) */
 .wk-head { position: sticky; top: var(--sat); z-index: 20; background: var(--bg); margin: -4px -16px 10px; padding: 0 16px 8px; }
@@ -33,7 +33,22 @@
 .ex-pager { overflow: hidden; margin: 0 -16px; touch-action: pan-y; }
 .ex-track { display: flex; align-items: flex-start; gap: 10px; padding: 0 16px; will-change: transform; }
 .ex-page { flex: 0 0 100%; min-width: 0; }
-.add-card { display: flex; flex-direction: column; gap: 12px; padding: 22px 14px; }
+/* 카드 높이 고정(--card-h: 화면에 맞춤): 위(이름·토글·메모)·아래(세트 추가·휴식) 고정, 가운데 세트 목록만 스크롤 */
+.ex-pager .ex-card { height: var(--card-h, auto); display: flex; flex-direction: column; overflow: hidden; }
+.ex-pager .ex-top, .ex-pager .ex-foot { flex: none; }
+.ex-pager .sets { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+.add-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 22px 14px; text-align: center; }
+.add-plus { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft, #e3f4ec); color: var(--accent); }
+.add-title { font-size: 18px; font-weight: 800; }
+.add-btn { width: 100%; max-width: 280px; margin-top: 6px; }
+/* 대체 운동 표시 */
+.sub-tag { margin-left: 6px; vertical-align: 2px; background: #fff0d4; color: #9a6400; border: 0; font-size: 11px; padding: 2px 6px; }
+.sub-of { font-size: 12px; margin-top: 1px; }
+/* 세트 줄: 왼쪽으로 밀면 삭제 버튼 */
+.set-wrap { position: relative; border-radius: 12px; overflow: hidden; flex: none; }
+.set-wrap .set-row { position: relative; background: var(--card); touch-action: pan-y; }
+.set-del { position: absolute; top: 0; right: 0; bottom: 0; width: 76px; border-radius: 12px; background: var(--danger, #e04545); color: #fff; font-weight: 700; font-size: 15px; }
+.cell .goal { margin-top: -6px; }
 .ex-dots { display: flex; justify-content: center; align-items: center; gap: 6px; height: 14px; }
 .ex-dots .dot { position: relative; }
 .ex-dots .dot::after { content: ''; position: absolute; inset: -10px -4px; } /* 누르기 쉽게 */
@@ -191,3 +206,4 @@
 .art-cell.on { border-color: var(--accent); background: var(--accent-soft); }
 .art-label { font-size: 13px; font-weight: 600; }
 .art-rec { position: absolute; top: 6px; right: 6px; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); }
+.ex-sum.skipped { opacity: 0.75; }

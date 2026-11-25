@@ -119,6 +119,14 @@ describe('운동 중 장비 토글', async () => {
     expect(s2.items[0]).toMatchObject({ opt: '바벨', name: '바벨 벤치 프레스' });
     expect(s2.items[0]!.sets[0]!.w).toBe(100);
   });
+  it('세트를 이미 체크했으면 체크한 세트는 그대로, 남은 세트만 그 옵션 기록으로', () => {
+    const base = { ...done('c', 1000, []), status: 'active' as const, endedAt: null };
+    const it0 = { ...W.buildItem(bench, sessions, 3, 1000), sets: [{ w: 70, r: 8, t: 'N' as const, done: true }, { w: 70, r: 8, t: 'N' as const, done: false }] };
+    const two = [...sessions, done('e', 300, [{ opt: '바벨', sets: [{ w: 100, r: 5, t: 'N', done: true }, { w: 110, r: 3, t: 'N', done: true }, { w: 120, r: 1, t: 'N', done: true }] }])];
+    const s2 = W.setItemOption({ ...base, items: [it0] }, 0, bench, '바벨', two);
+    expect(s2.items[0]!.sets.map((x) => [x.w, x.done])).toEqual([[70, true], [110, false], [120, false]]);
+    expect(W.setItemOption({ ...base, items: [it0] }, 0, bench, '바벨', []).items[0]!.sets).toEqual(it0.sets); // 기록 없으면 그대로
+  });
   it('맨몸 토글: 어시스트 ↔ 중량 = 무게 방식도 바뀜', () => {
     const it0 = W.buildItem(dips, [], 3, 1000);
     expect(it0).toMatchObject({ opt: '어시스트', kind: 'assist', name: '어시스트 딥스' });

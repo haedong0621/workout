@@ -11,7 +11,7 @@ export function lastOptionMap(sessions: readonly Session[]): Map<string, string>
   for (const s of sessions) {
     if (s.status !== 'done') continue;
     for (const it of s.items) {
-      if (!it.opt) continue;
+      if (!it.opt || it.skipped) continue;
       const b = best.get(it.exerciseId);
       if (!b || s.startedAt > b.ts) best.set(it.exerciseId, { ts: s.startedAt, opt: it.opt });
     }
@@ -24,7 +24,7 @@ export function lastUsedOption(sessions: readonly Session[], exerciseId: string,
   let best: { ts: number; opt: string } | null = null;
   for (const s of sessions) {
     if (s.status !== 'done' || s.startedAt >= before) continue;
-    for (const it of s.items) if (it.exerciseId === exerciseId && it.opt && (!best || s.startedAt > best.ts)) best = { ts: s.startedAt, opt: it.opt };
+    for (const it of s.items) if (it.exerciseId === exerciseId && it.opt && !it.skipped && (!best || s.startedAt > best.ts)) best = { ts: s.startedAt, opt: it.opt };
   }
   return best?.opt;
 }
@@ -87,7 +87,8 @@ export function previousEntry(sessions: readonly Session[], session: Session, ex
 
 /** 지난 기록의 세트를 "아직 안 한" 상태로 복사 */
 export function prefillSets(entry: Pick<HistoryEntry, 'sets'>): WorkoutSet[] {
-  return entry.sets.map((s) => ({ w: s.w, r: s.r, t: s.t || 'N', done: false }));
+  // 실패 세트는 목표 횟수도 이어 감 (없으면 그때 횟수)
+  return entry.sets.map((s) => ({ w: s.w, r: s.r, t: s.t || 'N', done: false, ...(s.t === 'F' ? { goal: s.goal ?? s.r } : {}) }));
 }
 
 export interface PersonalRecords { pr: number; rm: number; vol: number }
@@ -118,6 +119,6 @@ export function pinnedFirst<T extends { sessionId: string }>(list: readonly T[],
 /** 종목별 사용 횟수 (정렬용) */
 export function usageCounts(sessions: readonly Session[]): Map<string, number> {
   const m = new Map<string, number>();
-  for (const s of sessions) for (const it of s.items) m.set(it.exerciseId, (m.get(it.exerciseId) ?? 0) + 1);
+  for (const s of sessions) for (const it of s.items) if (!it.skipped) m.set(it.exerciseId, (m.get(it.exerciseId) ?? 0) + 1);
   return m;
 }

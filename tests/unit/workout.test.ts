@@ -51,14 +51,15 @@ describe('세트 편집', () => {
     expect(W.moveItem(['a', 'b', 'c'], 0, 2)).toEqual(['b', 'c', 'a']);
     expect(W.moveItem(['a', 'b'], 0, 5)).toEqual(['a', 'b']);
   });
-  it('finalizeSession은 체크 안 한 세트와 빈 종목을 뺌', () => {
+  it('finalizeSession은 체크 안 한 세트를 빼고, 안 한 종목은 미실시로 남김', () => {
     const s = W.updateSet(s0, 0, 1, { done: true });
     const f = W.finalizeSession(s, '  오늘 운동 ', 9000);
     expect(f.status).toBe('done');
     expect(f.endedAt).toBe(9000);
     expect(f.name).toBe('오늘 운동');
-    expect(f.items).toHaveLength(1);
+    expect(f.items).toHaveLength(2);
     expect(f.items[0]!.sets).toHaveLength(1);
+    expect(f.items[1]).toMatchObject({ sets: [], skipped: true });
     expect(W.finalizeSession(s, '   ', 9000).name).toBe('가슴날');
   });
   it('isAllDone', () => {

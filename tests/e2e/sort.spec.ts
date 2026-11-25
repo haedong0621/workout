@@ -87,6 +87,10 @@ test('운동 중: 좌우로 밀어 운동 넘기기, ⋯ 메뉴에서 꾹 눌러
   await touchDrag(page, { x: a!.x + 40, y: a!.y + a!.height / 2 }, { x: a!.x + 40, y: b!.y + b!.height + 24 });
   await expect(items).toHaveText(['바벨 스쿼트', '바벨 벤치 프레스']);
   await expect(page.locator('.ex-page .ex-name')).toHaveText(['바벨 스쿼트', '바벨 벤치 프레스']);
+  // 순서를 바꿔도 화면이 안 깨짐(카드 높이 그대로)
+  const hs = await page.locator('.ex-page .ex-card').evaluateAll((cs) => cs.map((c) => (c as HTMLElement).offsetHeight));
+  expect(new Set(hs).size).toBe(1);
+  expect(hs[0]).toBeGreaterThan(300);
 });
 
 test('운동 중: 손가락으로 밀면 한 장씩 넘어가고, 덜 밀면 제자리 (반쯤 멈추지 않음)', async ({ page }) => {
@@ -97,12 +101,14 @@ test('운동 중: 손가락으로 밀면 한 장씩 넘어가고, 덜 밀면 제
   await expect(page.locator('.sheet')).toHaveCount(0);
   const x1 = async () => (await page.locator('.ex-page').nth(1).boundingBox())!.x;
   const dotsY = (await page.locator('.ex-dots').boundingBox())!.y;
-  // 왼쪽으로 밀기 → 두 번째 운동이 딱 맞춰 옴
-  await touchDrag(page, { x: 320, y: 420 }, { x: 80, y: 425 }, 0);
+  // 카드 윗부분(이름·그림)을 왼쪽으로 밀기 → 두 번째 운동이 딱 맞춰 옴 (세트 줄 위에서 왼쪽은 삭제 버튼용)
+  const head = (await page.locator('.ex-page').nth(0).locator('.ex-head').boundingBox())!;
+  const hy = head.y + head.height / 2;
+  await touchDrag(page, { x: 320, y: hy }, { x: 80, y: hy + 5 }, 0);
   await expect.poll(x1).toBe(16);
   await expect(page.locator('.ex-dots .dot').nth(1)).toHaveClass(/on/);
   // 조금만 천천히 밀면 제자리로
-  await touchDrag(page, { x: 200, y: 420 }, { x: 230, y: 420 }, 0);
+  await touchDrag(page, { x: 200, y: hy }, { x: 230, y: hy }, 0);
   await page.waitForTimeout(150);
   await expect.poll(x1).toBe(16);
   // 점 줄은 그대로(카드 높이가 바뀌어도 안 움직임), 하단 바는 스크롤 영역 밖(#app 바로 아래)
