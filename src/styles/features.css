@@ -27,12 +27,16 @@
 .clock { font-size: 26px; font-weight: 800; color: var(--accent); letter-spacing: 0.01em; }
 .page.workout { padding-bottom: 210px; }
 .ex-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
-/* 운동 넘기기: 운동 하나 = 한 화면, 좌우로 밀기 (다음 카드가 오른쪽에 살짝 보임) */
-.ex-pager { display: flex; align-items: flex-start; gap: 10px; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 0 16px 2px; scroll-padding: 0 16px; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none; transition: height 0.2s; }
-.ex-pager::-webkit-scrollbar { display: none; }
-.ex-page { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; scroll-snap-stop: always; }
+/* 운동 넘기기: 운동 하나 = 한 화면, 좌우로 밀기 (useSwipePager가 track을 움직임, 다음 카드가 오른쪽에 살짝 보임) */
+.wk-head { position: sticky; top: var(--sat); z-index: 20; background: var(--bg); margin: -4px -16px 10px; padding: 0 16px 8px; }
+.wk-head .topbar { position: static; margin-bottom: 0; }
+.ex-pager { overflow: hidden; margin: 0 -16px; touch-action: pan-y; }
+.ex-track { display: flex; align-items: flex-start; gap: 10px; padding: 0 16px; will-change: transform; }
+.ex-page { flex: 0 0 100%; min-width: 0; }
 .add-card { display: flex; flex-direction: column; gap: 12px; padding: 22px 14px; }
-.ex-dots { display: flex; justify-content: center; align-items: center; gap: 6px; margin: 12px 0 6px; }
+.ex-dots { display: flex; justify-content: center; align-items: center; gap: 6px; height: 14px; }
+.ex-dots .dot { position: relative; }
+.ex-dots .dot::after { content: ''; position: absolute; inset: -10px -4px; } /* 누르기 쉽게 */
 .ex-dots .dot { width: 7px; height: 7px; padding: 0; border-radius: 99px; background: var(--line); transition: width 0.2s, background 0.2s; }
 .ex-dots .dot.on { width: 18px; background: var(--accent); }
 .ex-dots .dot.plus { width: 5px; height: 5px; }

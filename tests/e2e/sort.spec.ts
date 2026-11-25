@@ -89,6 +89,27 @@ test('운동 중: 좌우로 밀어 운동 넘기기, ⋯ 메뉴에서 꾹 눌러
   await expect(page.locator('.ex-page .ex-name')).toHaveText(['바벨 스쿼트', '바벨 벤치 프레스']);
 });
 
+test('운동 중: 손가락으로 밀면 한 장씩 넘어가고, 덜 밀면 제자리 (반쯤 멈추지 않음)', async ({ page }) => {
+  await routineWith(page, ['바벨 벤치 프레스', '바벨 스쿼트']);
+  await page.click('.topbar >> text=저장');
+  await page.click('.routine-card');
+  await sheet(page).locator('text=운동 시작').click();
+  await expect(page.locator('.sheet')).toHaveCount(0);
+  const x1 = async () => (await page.locator('.ex-page').nth(1).boundingBox())!.x;
+  const dotsY = (await page.locator('.ex-dots').boundingBox())!.y;
+  // 왼쪽으로 밀기 → 두 번째 운동이 딱 맞춰 옴
+  await touchDrag(page, { x: 320, y: 420 }, { x: 80, y: 425 }, 0);
+  await expect.poll(x1).toBe(16);
+  await expect(page.locator('.ex-dots .dot').nth(1)).toHaveClass(/on/);
+  // 조금만 천천히 밀면 제자리로
+  await touchDrag(page, { x: 200, y: 420 }, { x: 230, y: 420 }, 0);
+  await page.waitForTimeout(150);
+  await expect.poll(x1).toBe(16);
+  // 점 줄은 그대로(카드 높이가 바뀌어도 안 움직임), 하단 바는 스크롤 영역 밖(#app 바로 아래)
+  expect((await page.locator('.ex-dots').boundingBox())!.y).toBe(dotsY);
+  expect(await page.locator('.bottombar').evaluate((e) => e.parentElement?.id === 'app')).toBe(true);
+});
+
 test('운동 중: 마지막 세트를 체크하면 다음 운동으로 자동으로 넘어감', async ({ page }) => {
   await routineWith(page, ['바벨 벤치 프레스', '바벨 스쿼트']);
   await page.click('.topbar >> text=저장');

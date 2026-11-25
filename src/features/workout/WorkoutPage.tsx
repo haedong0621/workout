@@ -15,49 +15,30 @@ import { pickExercises } from '../exercises/ExercisePicker';
 import { ExerciseCard } from './ExerciseCard';
 import { ensureBodyweight } from './flows';
 import { RestBar } from './RestBar';
+import { useSwipePager } from './useSwipePager';
+import { createPortal } from 'preact/compat';
 import { useSortable } from '@/ui/sortable';
 import { moveItem } from '@/domain/workout';
 
 /** 운동 페이지 넘기기: 운동 하나 = 한 화면, 좌우로 밀기. 마지막 세트 체크 → 1초 뒤 다음 운동 */
 const AUTO_NEXT_MS = 1000;
-const PAGE_GAP = 10; // .ex-pager gap과 같게
 const lastPage = new Map<string, number>(); // 세션별 보던 페이지 (화면을 나갔다 와도 유지)
 
 export function WorkoutPage() {
   const s = activeSession.value;
-  const pagerRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(() => (s ? lastPage.get(s.id) ?? firstUndone(s) : 0));
   const doneRef = useRef<boolean[]>([]);
   const pages = (s?.items.length ?? 0) + 1; // + 운동 추가 화면
 
-  const step = () => { const el = pagerRef.current; return ((el?.children[0] as HTMLElement | undefined)?.offsetWidth ?? el?.clientWidth ?? 1) + PAGE_GAP; };
-  const goTo = (i: number, smooth = true) => {
-    const el = pagerRef.current;
-    if (!el) return;
-    el.scrollTo({ left: i * step(), behavior: smooth ? 'smooth' : 'auto' });
+  const goTo = (i: number) => {
+    const n = Math.max(0, Math.min(pages - 1, i));
+    setPage(n);
+    if (s) lastPage.set(s.id, n);
     // 화면 스크롤 영역(#view)을 맨 위로 — 다음 운동은 처음부터 보이게
-    const view = el.closest('#view');
-    if (smooth && view && view.scrollTop > 0) view.scrollTo({ top: 0, behavior: 'smooth' });
+    const view = pager.viewRef.current?.closest('#view');
+    if (view && view.scrollTop > 0) view.scrollTo({ top: 0, behavior: 'smooth' });
   };
-  // 상자 높이 = 지금 보는 카드 높이 (가장 긴 카드에 맞춰 늘어나 아래가 비는 것 방지). 세트 추가 등으로 바뀌면 따라감
-  useEffect(() => {
-    const el = pagerRef.current, cur = el?.children[page] as HTMLElement | undefined;
-    if (!el || !cur) return;
-    const fit = () => { el.style.height = cur.offsetHeight + 2 + 'px'; };
-    fit();
-    const ro = new ResizeObserver(fit);
-    ro.observe(cur);
-    return () => ro.disconnect();
-  }, [page, s?.items.length]);
-  // 처음 열 때 보던 페이지로
-  useEffect(() => { goTo(Math.min(page, pages - 1), false); }, [s?.id]);
-  // 지금 보는 페이지 기억
-  const onScroll = () => {
-    const el = pagerRef.current;
-    if (!el || !s) return;
-    const i = Math.max(0, Math.min(pages - 1, Math.round(el.scrollLeft / step())));
-    if (i !== page) { setPage(i); lastPage.set(s.id, i); }
-  };
+  const pager = useSwipePager(pages, Math.min(page, pages - 1), goTo);
   // 마지막 세트를 체크해 운동이 끝나면 1초 뒤 다음 운동으로
   useEffect(() => {
     if (!s) return;
@@ -91,37 +72,44 @@ export function WorkoutPage() {
 
   return (
     <div class="page workout">
-      <div class="topbar workout-top">
-        <button class="icon-btn" type="button" onClick={() => go(paths.home)} aria-label="홈으로(운동은 계속돼요)"><Icon name="back" /></button>
-        <button class="wk-title" type="button" onClick={() => renameSession(s)}>
-          <div class="wk-name">{s.name}</div>
-          <Elapsed since={s.startedAt} class="clock mono" />
-        </button>
-        <button class="icon-btn" type="button" onClick={() => moreMenu(s)} aria-label="더보기"><Icon name="more" /></button>
+      <div class="wk-head">
+        <div class="topbar workout-top">
+          <button class="icon-btn" type="button" onClick={() => go(paths.home)} aria-label="홈으로(운동은 계속돼요)"><Icon name="back" /></button>
+          <button class="wk-title" type="button" onClick={() => renameSession(s)}>
+            <div class="wk-name">{s.name}</div>
+            <Elapsed since={s.startedAt} class="clock mono" />
+          </button>
+          <button class="icon-btn" type="button" onClick={() => moreMenu(s)} aria-label="더보기"><Icon name="more" /></button>
+        </div>
+        <div class="ex-dots" aria-label={`${Math.min(page + 1, pages)} / ${pages}`}>
+          {Array.from({ length: pages }, (_, i) => <button key={i} type="button" class={'dot' + (i === Math.min(page, pages - 1) ? ' on' : '') + (i === pages - 1 ? ' plus' : '')} aria-label={i === pages - 1 ? '운동 추가 화면' : `${i + 1}번째 운동`} onClick={() => goTo(i)} />)}
+        </div>
       </div>
 
-      <div class="ex-pager" ref={pagerRef} onScroll={onScroll}>
-        {s.items.map((it, idx) => <div class="ex-page" key={it.exerciseId + ':' + idx}><ExerciseCard session={s} item={it} idx={idx} /></div>)}
-        <div class="ex-page add-page">
-          <div class="ex-card add-card">
-            {!s.items.length && <EmptyState small title="운동이 없어요" sub="아래 버튼으로 운동을 추가하세요" />}
-            <button class="btn soft wide" type="button" onClick={() => addExercises(s)}><Icon name="plus" size={18} /> 운동 추가</button>
+      <div class="ex-pager" ref={pager.viewRef}>
+        <div class="ex-track" ref={pager.trackRef}>
+          {s.items.map((it, idx) => <div class="ex-page" key={it.exerciseId + ':' + idx}><ExerciseCard session={s} item={it} idx={idx} /></div>)}
+          <div class="ex-page add-page">
+            <div class="ex-card add-card">
+              {!s.items.length && <EmptyState small title="운동이 없어요" sub="아래 버튼으로 운동을 추가하세요" />}
+              <button class="btn soft wide" type="button" onClick={() => addExercises(s)}><Icon name="plus" size={18} /> 운동 추가</button>
+            </div>
           </div>
         </div>
       </div>
-      <div class="ex-dots" aria-label={`${Math.min(page + 1, pages)} / ${pages}`}>
-        {Array.from({ length: pages }, (_, i) => <button key={i} type="button" class={'dot' + (i === page ? ' on' : '') + (i === pages - 1 ? ' plus' : '')} aria-label={i === pages - 1 ? '운동 추가 화면' : `${i + 1}번째 운동`} onClick={() => goTo(i)} />)}
-      </div>
 
-      <RestBar />
-      <div class="bottombar">
-        <div class="bb-progress" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={done}><i style={{ width: `${total ? (done / total) * 100 : 0}%` }} /></div>
-        <div class="bb-stats">
-          <div class="bb-main">{fmtNum(volume, 0)} kg</div>
-          <div class="sub">{done}/{total} 세트 완료</div>
+      {/* 하단 바·휴식 바는 스크롤 영역(#view) 밖, #app 바로 아래에 붙여 화면에 완전히 고정 (시트보다는 아래) */}
+      {createPortal(<>
+        <RestBar />
+        <div class="bottombar">
+          <div class="bb-progress" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={done}><i style={{ width: `${total ? (done / total) * 100 : 0}%` }} /></div>
+          <div class="bb-stats">
+            <div class="bb-main">{fmtNum(volume, 0)} kg</div>
+            <div class="sub">{done}/{total} 세트 완료</div>
+          </div>
+          <button class="btn primary" type="button" onClick={() => finishFlow(s)}><Icon name="flag" size={18} /> 운동 완료</button>
         </div>
-        <button class="btn primary" type="button" onClick={() => finishFlow(s)}><Icon name="flag" size={18} /> 운동 완료</button>
-      </div>
+      </>, document.getElementById('app') ?? document.body)}
     </div>
   );
 }
