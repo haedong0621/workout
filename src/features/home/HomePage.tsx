@@ -100,7 +100,7 @@ function routineSheet(r: Routine) {
             if (!ex) return null;
             return (
               <div key={i} class="rs-item">
-                <ExThumb ex={ex} size={38} />
+                <ExThumb ex={ex} size={56} opt={it.opt} />
                 <div class="grow">{exName(ex, it.opt)}</div>
                 <span class="sub">{it.setCount || 3}세트</span>
               </div>

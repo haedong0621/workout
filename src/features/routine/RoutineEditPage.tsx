@@ -82,7 +82,7 @@ export function RoutineEditPage({ params }: RouteProps) {
       </div>
       <div class="routine-head">
         <button class="thumb-btn" type="button" aria-label="루틴 그림 바꾸기" onClick={changeThumb}>
-          <RoutineThumb r={d} size={72} url={thumbURL} />
+          <RoutineThumb r={d} size={96} url={thumbURL} />
           <span class="thumb-edit"><Icon name="edit" size={14} /></span>
         </button>
         <input ref={nameRef} class="input title-input" type="text" value={d.name} placeholder="루틴 이름 (예: 가슴 + 삼두)" enterKeyHint="done" onInput={(e) => set({ name: e.currentTarget.value })} />

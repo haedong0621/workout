@@ -44,7 +44,7 @@ export function RoutineList({ onOpen }: { onOpen: (r: Routine) => void }) {
 function RoutineCard({ r, last, sort, onOpen }: { r: Routine; last: number | undefined; sort: SortableBind; onOpen: () => void }) {
   return (
     <div class="routine-card" role="button" tabIndex={0} {...sort} onClick={onOpen} onKeyDown={(e) => { if (e.key === 'Enter') onOpen(); }}>
-      <RoutineThumb r={r} size={52} />
+      <RoutineThumb r={r} size={64} />
       <div class="grow">
         <div class="routine-name">{r.name}</div>
         <div class="sub">운동 {r.items.length}개{last ? ` · 마지막 ${fmtMD(last)}` : ''}</div>

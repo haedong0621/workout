@@ -35,9 +35,10 @@ export function routineArtURL(r: Pick<Routine, 'art' | 'items'>): string {
 
 export function RoutineThumb({ r, size = 56, url }: { r: Pick<Routine, 'imageId' | 'art' | 'items'>; size?: number; url?: string | null }) {
   const src = url !== undefined ? url : imgURL(r.imageId);
-  const style = { width: size + 'px', height: size + 'px' };
-  if (src) return <div class="thumb round" style={style}><img src={src} alt="" draggable={false} /></div>;
-  return <div class="thumb round routine-art" style={style}><img src={routineArtURL(r)} alt="" draggable={false} /></div>;
+  // 둥근 네모: 세로로 긴 사람 그림이 칸을 꽉 채우게 (동그라미면 잘려서 작아짐)
+  const style = { width: size + 'px', height: size + 'px', borderRadius: Math.round(size * 0.24) + 'px' };
+  if (src) return <div class="thumb" style={style}><img src={src} alt="" draggable={false} /></div>;
+  return <div class="thumb routine-art" style={style}><img src={routineArtURL(r)} alt="" draggable={false} /></div>;
 }
 
 export function PartPills({ byPart, suffix = '' }: { byPart: Record<string, number>; suffix?: string }) {
