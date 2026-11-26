@@ -1,7 +1,7 @@
 // 미실시 · 대체 운동 · 루틴 반영 · 실패 세트 목표
 import { describe, expect, it } from 'vitest';
 import { seedExercises } from '@/domain/seed';
-import { exerciseHistory, lastUsedOption, prefillSets, usageCounts } from '@/domain/history';
+import { exerciseHistory, lastUsedOption, prefillSets, previousEntry, usageCounts } from '@/domain/history';
 import { normalizeSession } from '@/domain/normalize';
 import type { Routine, Session, SessionItem } from '@/domain/types';
 import { sessionStats } from '@/domain/volume';
@@ -97,5 +97,30 @@ describe('실패 세트 목표 횟수', () => {
   it('다음에 불러올 때 목표도 이어 감', () => {
     expect(prefillSets({ sets: [{ w: 60, r: 7, t: 'F', done: true, goal: 10 }, { w: 60, r: 6, t: 'F', done: true }] }))
       .toEqual([{ w: 60, r: 7, t: 'F', done: false, goal: 10 }, { w: 60, r: 6, t: 'F', done: false, goal: 6 }]);
+  });
+});
+
+describe('같은 운동이 여러 루틴에 있으면 같은 루틴 기록 우선 (강도 안 섞임)', () => {
+  const curl = c;
+  const done = (id: string, routineId: string | null, start: number, w: number): Session => ({
+    id, name: id, routineId, startedAt: start, endedAt: start + 1, status: 'done', bw: 80, items: [item(curl, [[w, 10, true], [w, 10, true]])],
+  });
+  const shoulder: Routine = { id: 'sh', name: '어깨', emoji: '', imageId: null, createdAt: 0, items: [{ exerciseId: curl.id, setCount: 2 }] };
+  const arm: Routine = { ...shoulder, id: 'arm', name: '팔' };
+  const fresh: Routine = { ...shoulder, id: 'new', name: '새 루틴' };
+  const past = [done('s1', 'sh', 1000, 10), done('a1', 'arm', 2000, 30)]; // 가장 최근은 팔 루틴(30kg)
+  const start = (r: Routine | null) => W.createSession({ id: 'x', now: 5000, bw: 80, routine: r, exercises: ex, sessions: past });
+  it('어깨 루틴의 컬 → 어깨 루틴 기록(10kg)으로 채우고 "지난번"도 어깨 루틴', () => {
+    const s = start(shoulder);
+    expect(s.items[0]!.sets.map((x) => x.w)).toEqual([10, 10]);
+    expect(previousEntry(past, s, curl.id)?.sessionId).toBe('s1');
+  });
+  it('팔 루틴의 컬 → 팔 루틴 기록(30kg)', () => {
+    expect(start(arm).items[0]!.sets.map((x) => x.w)).toEqual([30, 30]);
+  });
+  it('그 루틴에서 처음이거나 루틴 없이 하면 → 전체 중 가장 최근(30kg)', () => {
+    expect(start(fresh).items[0]!.sets.map((x) => x.w)).toEqual([30, 30]);
+    const free = W.addItems(start(null), [W.buildItem(curl, past, 3, 5000)]);
+    expect(free.items[0]!.sets.map((x) => x.w)).toEqual([30, 30]);
   });
 });

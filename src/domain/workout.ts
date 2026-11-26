@@ -1,7 +1,7 @@
 // 운동(세션) 편집 로직 — 모두 "새 객체를 돌려주는" 순수 함수입니다.
 // 저장은 store 쪽에서 합니다. 그래서 여기 로직은 단위 테스트로 검증할 수 있어요.
 import { DEFAULT_REPS, DEFAULT_ROUTINE_EMOJI, DEFAULT_SET_COUNT } from './constants';
-import { exerciseHistory, lastUsedOption, prefillSets } from './history';
+import { lastUsedOption, latestEntry, prefillSets } from './history';
 import { TOGGLE_OPTIONS, kindFor, optionTitle } from './catalog.ts';
 import type { Exercise, Routine, RoutineItem, Session, SessionItem, SetType, WorkoutSet } from './types';
 import { timeOfDayName } from '@/lib/format';
@@ -25,11 +25,10 @@ function withOption(ex: Exercise, opt: string | undefined): Pick<SessionItem, 'n
   };
 }
 
-/** 종목을 세션 항목으로. 지난 기록(같은 옵션)이 있으면 그 세트를 그대로 불러와요. */
-export function buildItem(ex: Exercise, sessions: readonly Session[], setCount = DEFAULT_SET_COUNT, beforeTs = Infinity, wantedOpt?: string): SessionItem {
+/** 종목을 세션 항목으로. 지난 기록(같은 옵션, 같은 루틴 우선)이 있으면 그 세트를 그대로 불러와요. */
+export function buildItem(ex: Exercise, sessions: readonly Session[], setCount = DEFAULT_SET_COUNT, beforeTs = Infinity, wantedOpt?: string, routineId: string | null = null): SessionItem {
   const opt = pickOption(ex, sessions, wantedOpt, beforeTs);
-  const hist = exerciseHistory(sessions, ex.id, { before: beforeTs, opt: { toggle: ex.toggle, value: opt } });
-  const last = hist[hist.length - 1];
+  const last = latestEntry(sessions, ex.id, { before: beforeTs, opt: { toggle: ex.toggle, value: opt }, routineId });
   const sets = last ? prefillSets(last) : Array.from({ length: Math.max(1, setCount || DEFAULT_SET_COUNT) }, () => newSet());
   return { exerciseId: ex.id, part: ex.part, equip: ex.equip, ...withOption(ex, opt), sets };
 }
@@ -40,8 +39,7 @@ export function setItemOption(s: Session, idx: number, ex: Exercise, opt: string
     if (it.opt === opt || !ex.toggle || !TOGGLE_OPTIONS[ex.toggle].includes(opt)) return it;
     const next = { ...it, ...withOption(ex, opt) };
     if (ex.toggle === 'body') return next;
-    const hist = exerciseHistory(sessions, ex.id, { before: s.startedAt, excludeId: s.id, opt: { toggle: ex.toggle, value: opt } });
-    const last = hist[hist.length - 1];
+    const last = latestEntry(sessions, ex.id, { before: s.startedAt, excludeId: s.id, opt: { toggle: ex.toggle, value: opt }, routineId: s.routineId });
     if (!last) return next;
     const fill = prefillSets(last);
     const done = it.sets.filter((x) => x.done);
@@ -68,7 +66,7 @@ export function createSession({ id, now, bw, routine, exercises, sessions }: Cre
   if (routine) {
     for (const it of routine.items) {
       const ex = byId.get(it.exerciseId);
-      if (ex) items.push(buildItem(ex, sessions, it.setCount, now, it.opt));
+      if (ex) items.push(buildItem(ex, sessions, it.setCount, now, it.opt, routine.id));
     }
   }
   return {
@@ -183,14 +181,14 @@ export function shiftStart(s: Session, newStart: number): Session {
 export function substituteItem(s: Session, idx: number, ex: Exercise, sessions: readonly Session[]): Session {
   return updateItem(s, idx, (it) => {
     const orig = it.sub ?? { exerciseId: it.exerciseId, name: it.name, ...(it.opt ? { opt: it.opt } : {}) };
-    if (ex.id === orig.exerciseId) return { ...buildItem(ex, sessions, it.sets.length, s.startedAt, orig.opt) };
-    return { ...buildItem(ex, sessions, it.sets.length, s.startedAt), sub: orig };
+    if (ex.id === orig.exerciseId) return { ...buildItem(ex, sessions, it.sets.length, s.startedAt, orig.opt, s.routineId) };
+    return { ...buildItem(ex, sessions, it.sets.length, s.startedAt, undefined, s.routineId), sub: orig };
   });
 }
 
 /** 대체를 취소하고 원래 운동으로 */
 export function revertSubstitute(s: Session, idx: number, orig: Exercise, sessions: readonly Session[]): Session {
-  return updateItem(s, idx, (it) => (it.sub ? buildItem(orig, sessions, it.sets.length, s.startedAt, it.sub.opt) : it));
+  return updateItem(s, idx, (it) => (it.sub ? buildItem(orig, sessions, it.sets.length, s.startedAt, it.sub.opt, s.routineId) : it));
 }
 
 /** 루틴 기준으로 본 운동 id (대체한 운동은 원래 운동) */

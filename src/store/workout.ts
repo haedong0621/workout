@@ -33,13 +33,13 @@ export function startWorkout(routineId: string | null): Session {
 }
 
 export function addExercisesToSession(sessionId: string, list: readonly Exercise[]): void {
-  updateSession(sessionId, (s) => W.addItems(s, list.map((ex) => W.buildItem(ex, sessions.value, 3, s.startedAt))));
+  updateSession(sessionId, (s) => W.addItems(s, list.map((ex) => W.buildItem(ex, sessions.value, 3, s.startedAt, undefined, s.routineId))));
 }
 
 export function swapExercise(sessionId: string, idx: number, ex: Exercise): void {
   updateSession(sessionId, (s) => {
     const cur = s.items[idx];
-    return W.replaceItem(s, idx, W.buildItem(ex, sessions.value, cur?.sets.length ?? 3, s.startedAt));
+    return W.replaceItem(s, idx, W.buildItem(ex, sessions.value, cur?.sets.length ?? 3, s.startedAt, undefined, s.routineId));
   });
 }
 
