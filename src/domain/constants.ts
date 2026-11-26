@@ -22,7 +22,7 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
   restAuto: true,
   sound: true,
   soundMode: 'mix',
-  notify: false,
+  notify: true, // 휴식 끝 알림: 기본 켜짐 (허용은 처음 운동 시작 때 물어봄)
   keepAwake: true,
   includeWarmup: true,
   lastBackupAt: 0,

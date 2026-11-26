@@ -139,3 +139,10 @@ test('잘못된 파일은 거부', async ({ page }) => {
   await (await chooser).setFiles({ name: 'x.json', mimeType: 'application/json', buffer: Buffer.from('{"hello":1}') });
   await expect(page.locator('.toast.show')).toContainText('이 앱의 백업 파일이 아니에요');
 });
+
+test('휴식 끝 알림은 기본 켜짐 (알림 허용된 폰)', async ({ page }) => {
+  // 헤드리스 크롬은 알림을 늘 "거부"로 보고해서, 허용된 폰처럼 흉내
+  await page.addInitScript(() => { Object.defineProperty(Notification, 'permission', { get: () => 'granted' }); });
+  await page.goto('/#/settings');
+  await expect(page.getByRole('switch', { name: '종료 알림' })).toHaveAttribute('aria-checked', 'true');
+});
