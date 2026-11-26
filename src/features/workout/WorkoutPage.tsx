@@ -203,8 +203,8 @@ async function askRoutineUpdate(done: Session): Promise<boolean> {
   return ok;
 }
 
-/** 카드 높이 = 화면에 맞춤(모든 카드 같은 높이 → 넘길 때 꿀렁거리지 않음). 휴식 바 자리는 항상 비워 둠 */
-const REST_SLOT = 14 + 66 + 10; // 하단 바 위 간격 + 휴식 바 높이 + 여유 (.restbar bottom 과 맞춤)
+/** 카드 높이 = 화면에 맞춤(모든 카드 같은 높이 → 넘길 때 꿀렁거리지 않음). 하단 바 바로 위까지, 쉬는 동안엔 휴식 바가 아래 버튼 위에 떠 있음 */
+const BOTTOM_GAP = 10;
 const MIN_CARD_H = 320;
 function useCardHeight(viewRef: { current: HTMLDivElement | null }) {
   useLayoutEffect(() => {
@@ -214,7 +214,7 @@ function useCardHeight(viewRef: { current: HTMLDivElement | null }) {
       if (!v || !bb) return;
       const view = v.closest('#view');
       const top = v.getBoundingClientRect().top + (view?.scrollTop ?? 0);
-      const h = Math.max(MIN_CARD_H, Math.floor(bb.getBoundingClientRect().top - REST_SLOT - top));
+      const h = Math.max(MIN_CARD_H, Math.floor(bb.getBoundingClientRect().top - BOTTOM_GAP - top));
       v.style.setProperty('--card-h', h + 'px');
     };
     fit();

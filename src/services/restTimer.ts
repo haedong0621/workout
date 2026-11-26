@@ -7,8 +7,8 @@ export interface RestState { endAt: number; total: number; label: string; fired:
 
 const LS_KEY = 'workout-log-rest';
 const IDLE: RestState = { endAt: 0, total: 0, label: '', fired: true };
-/** 끝난 뒤 이 시간이 지나면 표시를 치움 */
-const CLEAR_AFTER_MS = 30_000;
+/** 끝난 뒤 이 시간이 지나면 표시를 치움 ("휴식 끝!"을 잠깐 보여 주고 자동으로 사라짐) */
+const CLEAR_AFTER_MS = 2_000;
 /** 앱이 멈췄다가 이보다 늦게 깨어나면 소리를 내지 않음 */
 const LATE_ALERT_MS = 4_000;
 

@@ -1,6 +1,6 @@
 {
   "name": "workout-log",
-  "version": "2.11.1",
+  "version": "2.11.2",
   "private": true,
   "type": "module",
   "description": "운동 일지 — 아이폰 홈 화면에 추가해서 쓰는 개인 운동 기록 PWA",
